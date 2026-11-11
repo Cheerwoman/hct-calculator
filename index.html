@@ -619,22 +619,6 @@
       }
     }
 
-    // Google Sheet 網址 Modal 設定
-    function toggleApiModal() {
-      document.getElementById('apiModal').classList.toggle('hidden');
-    }
-
-    function saveScriptUrl() {
-      const url = document.getElementById('scriptUrlInput').value.trim();
-      localStorage.setItem('hct_script_url', url);
-      alert("✅ Google Sheet 網址已儲存！");
-      toggleApiModal();
-    }
-
-    function loadSavedScriptUrl() {
-      const saved = localStorage.getItem('hct_script_url') || "";
-      document.getElementById('scriptUrlInput').value = saved;
-    }
 
     // 將資料寫入 Google Form (需求 5 & 6)
 function saveToGoogleSheet() {
