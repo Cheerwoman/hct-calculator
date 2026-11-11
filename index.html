@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>新竹物流 運費速算助手</title>
+  <title>新竹物流 運費速算與帳務紀錄器</title>
   
   <!-- iPhone 桌面 App 圖示 (Apple Touch Icon) -->
   <link rel="apple-touch-icon" sizes="180x180" href="https://img.icons8.com/color/180/truck--v1.png">
@@ -30,18 +30,50 @@
           <span class="text-lime-400">H</span><span>CT</span>
         </div>
         <div>
-          <h1 class="font-bold text-lg text-white leading-tight">新竹物流 運費速算</h1>
-          <p class="text-xs text-orange-100 font-medium">107/08/01 費率與才數起碼全對照版</p>
+          <h1 class="font-bold text-lg text-white leading-tight">新竹物流 運費帳務管理</h1>
+          <p class="text-xs text-orange-100 font-medium">107/08/01 費率與 Google Sheet 試算表同步版</p>
         </div>
       </div>
-      <button onclick="loadSampleCase()" class="bg-white/20 hover:bg-white/30 text-white text-xs px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1 border border-white/20">
-        <i class="fa-solid fa-wand-magic-sparkles"></i>
-        <span>官方範例</span>
+      <button onclick="toggleApiModal()" class="bg-white/20 hover:bg-white/30 text-white text-xs px-2.5 py-1.5 rounded-lg font-medium transition flex items-center gap-1 border border-white/20">
+        <i class="fa-solid fa-gear"></i>
+        <span>Sheet設定</span>
       </button>
     </header>
 
+    <!-- Google Sheet Web App URL Modal -->
+    <div id="apiModal" class="hidden bg-slate-800 border-b border-orange-500/40 p-4 text-xs space-y-2">
+      <div class="flex justify-between items-center text-orange-400 font-bold">
+        <span><i class="fa-solid fa-link mr-1"></i>Google Apps Script Web App 網址設定</span>
+        <button onclick="toggleApiModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <input type="text" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono text-[11px] focus:outline-none focus:ring-1 focus:ring-orange-500">
+      <div class="flex justify-between items-center">
+        <span class="text-[10px] text-slate-400">貼上發布好的 App Script 網址，系統會自動儲存於本機</span>
+        <button onclick="saveScriptUrl()" class="bg-orange-500 text-white font-bold px-3 py-1 rounded-lg text-xs hover:bg-orange-600">儲存</button>
+      </div>
+    </div>
+
     <!-- Main Content Area -->
     <main class="flex-1 p-4 space-y-4 overflow-y-auto">
+
+      <!-- 0. 帳務紀錄與客戶資料卡片 (老公新增需求 1 & 2) -->
+      <section class="bg-slate-800/90 rounded-2xl p-4 border border-orange-500/40 shadow-sm space-y-3">
+        <div class="flex items-center gap-2 text-orange-400 font-semibold text-sm">
+          <i class="fa-solid fa-user-pen text-base"></i>
+          <span>客戶報價與帳務紀錄資訊</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">1. 日期時間 (自動/可更動)</label>
+            <input type="datetime-local" id="inputDateTime" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-2.5 py-2 text-xs font-mono text-amber-300 focus:ring-2 focus:ring-orange-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">2. 客戶名稱 / 暱稱</label>
+            <input type="text" id="inputCustomer" placeholder="例：牧牧貓砂、林先生" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-white focus:ring-2 focus:ring-orange-500 focus:outline-none">
+          </div>
+        </div>
+      </section>
 
       <!-- 1. 起終點營業所選擇 -->
       <section class="bg-slate-800/90 rounded-2xl p-4 border border-slate-700/60 shadow-sm space-y-3">
@@ -77,7 +109,7 @@
           </div>
         </div>
 
-        <!-- Mode A: 直接輸入 重量/才數 -->
+        <!-- Mode A: 直接輸入 重量/才數 (預設: 10kg / 1才) -->
         <div id="modeWeightArea" class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-xs text-slate-400 mb-1">單件實際重量 (kg)</label>
@@ -100,12 +132,30 @@
           <div class="grid grid-cols-3 gap-2">
             <div>
               <label class="block text-xs text-slate-400 mb-1">長 (cm)</label>
-              <input type="number" id="dimL" value="60" min="0" oninput="calcDim()" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-2.5 py-2 text-sm text-center font-semibold text-white focus:ring-2 focus:ring-orange-500 focus:outline-none">
+              <input type="number" id="dimL" value="45" min="0" oninput="calcDim()" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-2.5 py-2 text-sm text-center font-semibold text-white focus:ring-2 focus:ring-orange-500 focus:outline-none">
             </div>
             <div>
               <label class="block text-xs text-slate-400 mb-1">寬 (cm)</label>
-              <input type="number" id="dimW" value="40" min="0" oninput="calcDim()" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-2.5 py-2 text-sm text-center font-semibold text-white focus:ring-2 focus:ring-orange-500 focus:outline-none">
-        <!-- 件數調整選單 -->
+              <input type="number" id="dimW" value="30" min="0" oninput="calcDim()" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-2.5 py-2 text-sm text-center font-semibold text-white focus:ring-2 focus:ring-orange-500 focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">高 (cm)</label>
+              <input type="number" id="dimH" value="20" min="0" oninput="calcDim()" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-2.5 py-2 text-sm text-center font-semibold text-white focus:ring-2 focus:ring-orange-500 focus:outline-none">
+            </div>
+          </div>
+          <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-700/40 text-xs text-slate-300 space-y-1">
+            <div class="flex justify-between">
+              <span>精確計算才數：</span>
+              <span id="dimExactDisplay" class="font-mono text-slate-400">1.0 才</span>
+            </div>
+            <div class="flex justify-between text-orange-400 font-semibold">
+              <span>無條件進位整數才：</span>
+              <span id="dimCeilDisplay" class="font-bold">1 才 (10.0 kg)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 件數調整選單 (預設: 1件) -->
         <div class="pt-2 border-t border-slate-700/50 flex items-center justify-between">
           <span class="text-xs font-medium text-slate-300">同規格總件數</span>
           <div class="flex items-center space-x-2 bg-slate-900 rounded-xl p-1 border border-slate-700">
@@ -146,6 +196,7 @@
             <span id="songFeeDisplay" class="font-bold text-slate-300">$27.0</span>
           </label>
 
+          <!-- 特殊服務費 (預設：不勾選) -->
           <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/50 cursor-pointer">
             <div class="flex items-center gap-2">
               <input type="checkbox" id="chkTe" onchange="calculate()" class="w-4 h-4 rounded text-orange-500 accent-orange-500">
@@ -189,71 +240,96 @@
         </div>
       </section>
 
-      <!-- 4. 費用明細與結算 -->
+      <!-- 4. 費用明細與實收損益比對區 (老公需求 3, 4, 5) -->
       <section class="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-5 border border-orange-500/30 shadow-xl space-y-4">
         <div class="text-center pb-3 border-b border-slate-700/60">
           <div class="flex justify-center items-center gap-2 text-xs text-slate-400 mb-1">
-            <span>預估總金額 (含5%營業稅)</span>
-            <span id="calcWeightTag" class="bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full font-mono text-[10px]">0.4 百公斤 (W)</span>
+            <span>系統算定運費 (含5%營業稅)</span>
+            <span id="calcWeightTag" class="bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full font-mono text-[10px]">0.1 百公斤 (W)</span>
           </div>
           <div id="totalPriceDisplay" class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-400 to-amber-200">
-            $ 240
+            $ 104
           </div>
-          <div id="perPieceDisplay" class="text-xs text-slate-400 mt-1">單件平均: $120</div>
+          <div id="perPieceDisplay" class="text-xs text-slate-400 mt-1">單件平均: $104</div>
+        </div>
+
+        <!-- 實收金額與多收/少收動態試算 (老公需求 3 & 4) -->
+        <div class="bg-slate-950/80 p-3.5 rounded-xl border border-amber-500/40 space-y-3">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-amber-400 flex items-center gap-1">
+              <i class="fa-solid fa-hand-holding-dollar"></i> 3. 實際向客戶收取金額：
+            </span>
+            <div class="relative w-32">
+              <span class="absolute left-2.5 top-1.5 text-xs text-slate-400">$</span>
+              <input type="number" id="inputActualFee" oninput="calcDifference()" class="w-full bg-slate-900 border border-amber-500/60 rounded-lg pl-6 pr-2 py-1 text-sm font-bold text-emerald-400 focus:outline-none focus:ring-1 focus:ring-amber-500">
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center text-xs pt-2 border-t border-slate-800">
+            <span class="text-slate-400">4. 多收 / (少收) 損益差額：</span>
+            <span id="diffFeeDisplay" class="font-bold text-sm font-mono text-emerald-400">$0</span>
+          </div>
         </div>
 
         <div class="space-y-2 text-xs">
           <div class="font-semibold text-slate-300 flex justify-between items-center mb-1">
-            <span>全單費用明細拆解 (總計 <span id="summaryPieces">2</span> 件)：</span>
+            <span>全單費用明細拆解 (總計 <span id="summaryPieces">1</span> 件)：</span>
           </div>
 
           <div class="flex justify-between items-center p-2 rounded-lg bg-slate-900/50">
             <span class="text-slate-300">接費 (派單收件)</span>
-            <span id="summaryJie" class="font-mono text-slate-300">$27</span>
+            <span id="summaryJie" class="font-mono text-slate-300">$27.0</span>
           </div>
 
           <div class="flex justify-between items-center p-2 rounded-lg bg-slate-900/50">
             <div>
               <span class="font-medium text-slate-200">本款運費 (基本)</span>
-              <div id="benDetailDisplay" class="text-[10px] text-slate-400">單件起碼 $130 / 百公斤 $365 (全單合併計算)</div>
+              <div id="benDetailDisplay" class="text-[10px] text-slate-400">單件起碼 $50 / 百公斤 $65 (全單合併計算)</div>
             </div>
-            <span id="benFeeDisplay" class="font-bold text-slate-200">$156</span>
+            <span id="benFeeDisplay" class="font-bold text-slate-200">$50</span>
           </div>
 
           <div class="flex justify-between items-center p-2 rounded-lg bg-slate-900/50">
             <span class="text-slate-300">送費 (派送)</span>
-            <span id="summarySong" class="font-mono text-slate-300">$27</span>
+            <span id="summarySong" class="font-mono text-slate-300">$27.0</span>
           </div>
 
           <div class="flex justify-between items-center p-2 rounded-lg bg-slate-900/50">
             <span class="text-slate-300">特殊服務費 (樓層/地下室)</span>
-            <span id="summaryTe" class="font-mono text-slate-300">$30</span>
+            <span id="summaryTe" class="font-mono text-slate-300">$0.0</span>
           </div>
 
           <div id="summaryTiaoRow" class="hidden flex justify-between items-center p-2 rounded-lg bg-amber-950/30 text-amber-300">
             <span>基隆/八堵挑挽工資</span>
-            <span id="summaryTiao" class="font-mono">$0</span>
+            <span id="summaryTiao" class="font-mono">$0.0</span>
           </div>
 
           <div id="summaryLianRow" class="hidden flex justify-between items-center p-2 rounded-lg bg-rose-950/30 text-rose-300">
             <span>偏遠聯運費</span>
-            <span id="summaryLian" class="font-mono">$0</span>
+            <span id="summaryLian" class="font-mono">$0.0</span>
           </div>
         </div>
 
         <div class="bg-slate-950/70 rounded-xl p-3 text-[11px] font-mono text-slate-400 space-y-1 border border-slate-800">
           <div class="text-orange-400 font-sans font-semibold mb-1 flex items-center gap-1">
             <i class="fa-solid fa-calculator"></i>
-            <span>計算公式與說明</span>
+            <span>計算公式說明</span>
           </div>
           <div id="formulaText" class="space-y-0.5 leading-relaxed"></div>
         </div>
+
+        <!-- 5. 儲存並寫入 Google Sheet 按鈕 (老公需求 5 & 6) -->
+        <button id="btnSaveSheet" onclick="saveToGoogleSheet()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm active:scale-95">
+          <i class="fa-solid fa-file-excel text-base"></i>
+          <span>儲存帳務紀錄至 Google 試算表</span>
+        </button>
+
       </section>
 
     </main>
 
     <footer class="text-center text-[11px] text-slate-500 py-2 border-t border-slate-800">
-      HCT 107/08/01 費率標準速查系統
+      HCT 107/08/01 費率與 Google Sheet 帳務自動同步系統
     </footer>
   </div>
 
@@ -321,10 +397,20 @@
       MATRIX_DATA[orig][dest] = { base, rate };
     });
 
+    let currentCalcData = {};
+
     window.onload = function() {
+      setCurrentDateTime();
       initOptions();
+      loadSavedScriptUrl();
       calculate();
     };
+
+    function setCurrentDateTime() {
+      const now = new Date();
+      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+      document.getElementById('inputDateTime').value = now.toISOString().slice(0, 16);
+    }
 
     function initOptions() {
       const originSel = document.getElementById('originSelect');
@@ -335,6 +421,7 @@
         const opt1 = document.createElement('option'); opt1.value = loc; opt1.innerText = loc; originSel.appendChild(opt1);
         const opt2 = document.createElement('option'); opt2.value = loc; opt2.innerText = loc; destSel.appendChild(opt2);
       });
+      // 預設: 南崁 -> 南崁
       originSel.value = "南崁";
       destSel.value = "南崁";
     }
@@ -395,23 +482,8 @@
         document.getElementById('chkTe').checked = false;
       } else {
         document.getElementById('chkSong').checked = true;
-        document.getElementById('chkTe').checked = true;
+        document.getElementById('chkTe').checked = false;
       }
-      calculate();
-    }
-
-    function loadSampleCase() {
-      document.getElementById('originSelect').value = "台北";
-      document.getElementById('destSelect').value = "高雄";
-      document.getElementById('inputCai').value = 2;
-      document.getElementById('inputWeight').value = 20;
-      document.getElementById('pieceCount').value = 2;
-      document.getElementById('chkJie').checked = true;
-      document.getElementById('chkSong').checked = true;
-      document.getElementById('chkTe').checked = true;
-      document.getElementById('chkLian').checked = false;
-      toggleLianInput();
-      switchMode('weight');
       calculate();
     }
 
@@ -477,7 +549,7 @@
       const grandTotal = Math.round(benTotal + jieTotal + songTotal + teTotal + tiaoTotal + lianTotal);
       const singleAvg = Math.round(grandTotal / pieces);
 
-      document.getElementById('calcWeightTag').innerText = `${W.toFixed(1)} 百公斤 (全單總重)`;
+      document.getElementById('calcWeightTag').innerText = `${W.toFixed(1)} 百公斤 (W)`;
       document.getElementById('totalPriceDisplay').innerText = `$ ${grandTotal.toLocaleString()}`;
       document.getElementById('perPieceDisplay').innerText = `單件平均: $${singleAvg}`;
       document.getElementById('summaryPieces').innerText = pieces;
@@ -517,8 +589,118 @@
       if (isBaseKeelung && chkTiao.checked) sumParts.push(`挑挽 ($${tiaoTotal.toFixed(1)})`);
       if (isLianChecked) sumParts.push(`聯運 ($${lianTotal.toFixed(1)})`);
 
-      formulaHtml += `<div class="pt-1 text-amber-300 font-bold border-t border-slate-700/60 mt-1">總運費 = ${sumParts.join(' + ')} = $${grandTotal} 元</div>`;
+      formulaHtml += `<div class="pt-1 text-amber-300 font-bold border-t border-slate-700/60 mt-1">系統估算 = ${sumParts.join(' + ')} = $${grandTotal} 元</div>`;
       document.getElementById('formulaText').innerHTML = formulaHtml;
+
+      // 儲存目前全盤資料 (供 Google Sheet 使用)
+      currentCalcData = {
+        origin: originRaw,
+        dest: destRaw,
+        weight: singleWeight,
+        cai: singleCaiCeil,
+        pieces: pieces,
+        systemFee: grandTotal,
+        jieFee: jieTotal,
+        songFee: songTotal,
+        teFee: teTotal,
+        tiaoFee: tiaoTotal,
+        lianFee: lianTotal
+      };
+
+      // 預設實收運費帶入系統計算金額
+      const actualInput = document.getElementById('inputActualFee');
+      if (!actualInput.value || actualInput.dataset.userEdited !== "true") {
+        actualInput.value = grandTotal;
+      }
+      calcDifference();
+    }
+
+    // 計算 實收 vs 系統 差異 (多收為正，少收為括號紅字)
+    function calcDifference() {
+      const actualInput = document.getElementById('inputActualFee');
+      actualInput.dataset.userEdited = "true";
+      const actual = parseFloat(actualInput.value) || 0;
+      const sys = currentCalcData.systemFee || 0;
+      const diff = actual - sys;
+      const diffEl = document.getElementById('diffFeeDisplay');
+
+      if (diff > 0) {
+        diffEl.className = "font-bold text-sm font-mono text-emerald-400";
+        diffEl.innerText = `+ 多收 $${diff.toLocaleString()}`;
+      } else if (diff < 0) {
+        diffEl.className = "font-bold text-sm font-mono text-rose-400";
+        diffEl.innerText = `(少收 $${Math.abs(diff).toLocaleString()})`;
+      } else {
+        diffEl.className = "font-bold text-sm font-mono text-slate-300";
+        diffEl.innerText = `$0 (剛好收平)`;
+      }
+    }
+
+    // Google Sheet 網址 Modal 設定
+    function toggleApiModal() {
+      document.getElementById('apiModal').classList.toggle('hidden');
+    }
+
+    function saveScriptUrl() {
+      const url = document.getElementById('scriptUrlInput').value.trim();
+      localStorage.setItem('hct_script_url', url);
+      alert("✅ Google Sheet 網址已儲存！");
+      toggleApiModal();
+    }
+
+    function loadSavedScriptUrl() {
+      const saved = localStorage.getItem('hct_script_url') || "";
+      document.getElementById('scriptUrlInput').value = saved;
+    }
+
+    // 將資料寫入 Google Sheet (需求 5 & 6)
+    function saveToGoogleSheet() {
+      const scriptUrl = localStorage.getItem('hct_script_url');
+      if (!scriptUrl) {
+        alert("請先點擊右上角「Sheet設定」，貼入您的 Google Apps Script Web App 網址！");
+        toggleApiModal();
+        return;
+      }
+
+      const btn = document.getElementById('btnSaveSheet');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>正在上傳紀錄中...</span>`;
+
+      const actualFee = parseFloat(document.getElementById('inputActualFee').value) || 0;
+      const diffFee = actualFee - currentCalcData.systemFee;
+
+      const payload = {
+        dateTime: document.getElementById('inputDateTime').value.replace('T', ' '),
+        customer: document.getElementById('inputCustomer').value.trim() || '未填寫',
+        origin: currentCalcData.origin,
+        dest: currentCalcData.dest,
+        weight: currentCalcData.weight,
+        cai: currentCalcData.cai,
+        pieces: currentCalcData.pieces,
+        systemFee: currentCalcData.systemFee,
+        actualFee: actualFee,
+        diffFee: diffFee >= 0 ? diffFee : `(${Math.abs(diffFee)})`,
+        jieFee: currentCalcData.jieFee,
+        songFee: currentCalcData.songFee,
+        teFee: currentCalcData.teFee,
+        tiaoFee: currentCalcData.tiaoFee,
+        lianFee: currentCalcData.lianFee
+      };
+
+      fetch(scriptUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).then(() => {
+        alert("🎉 成功將運費紀錄寫入 Google 試算表！");
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-file-excel text-base"></i> <span>儲存帳務紀錄至 Google 試算表</span>`;
+      }).catch(err => {
+        alert("❌ 上傳失敗，請檢查網路或 Google Sheet 網址設定。");
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-file-excel text-base"></i> <span>儲存帳務紀錄至 Google 試算表</span>`;
+      });
     }
   </script>
 </body>
