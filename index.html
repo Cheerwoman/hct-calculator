@@ -653,55 +653,53 @@
       document.getElementById('scriptUrlInput').value = saved;
     }
 
-    // 將資料寫入 Google Sheet (需求 5 & 6)
-    function saveToGoogleSheet() {
-      const scriptUrl = localStorage.getItem('hct_script_url');
-      if (!scriptUrl) {
-        alert("請先點擊右上角「Sheet設定」，貼入您的 Google Apps Script Web App 網址！");
-        toggleApiModal();
-        return;
-      }
+    // 將資料寫入 Google Form (需求 5 & 6)
+function saveToGoogleSheet() {
+    // 這是我們剛剛從 Google 表單取得的專屬通道網址
+    const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSfmjaFfTL29ImPN_IYZO3vEziFDBDpSctFtbkHASXyOi9mAMQ/formResponse";
+    
+    const btn = document.getElementById('btnSaveSheet');
+    btn.disabled = true;
+    btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>正在上傳至表單與試算表...</span>`;
 
-      const btn = document.getElementById('btnSaveSheet');
-      btn.disabled = true;
-      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>正在上傳紀錄中...</span>`;
+    const actualFee = parseFloat(document.getElementById('inputActualFee').value) || 0;
+    const diffFee = actualFee - currentCalcData.systemFee;
+    const diffText = diffFee >= 0 ? `+${diffFee}` : `(${Math.abs(diffFee)})`;
+    const dateTimeVal = document.getElementById('inputDateTime').value.replace('T', ' ');
+    const customerVal = document.getElementById('inputCustomer').value.trim() || '未填寫';
 
-      const actualFee = parseFloat(document.getElementById('inputActualFee').value) || 0;
-      const diffFee = actualFee - currentCalcData.systemFee;
+    // 將資料打包成表單格式，絕對不會被 Google 資安攔截！
+    const formData = new FormData();
+    formData.append("entry.1181036954", dateTimeVal);
+    formData.append("entry.1651211648", customerVal);
+    formData.append("entry.1459170177", currentCalcData.origin);
+    formData.append("entry.1002797781", currentCalcData.dest);
+    formData.append("entry.1584600295", currentCalcData.weight);
+    formData.append("entry.1100410546", currentCalcData.cai);
+    formData.append("entry.1066831283", currentCalcData.pieces);
+    formData.append("entry.290477875", currentCalcData.systemFee);
+    formData.append("entry.240506603", actualFee);
+    formData.append("entry.1733562663", diffText);
+    formData.append("entry.1187700530", currentCalcData.jieFee);
+    formData.append("entry.476514751", currentCalcData.songFee);
+    formData.append("entry.1443211130", currentCalcData.teFee);
+    formData.append("entry.998539564", currentCalcData.tiaoFee);
+    formData.append("entry.262490930", currentCalcData.lianFee);
 
-      const payload = {
-        dateTime: document.getElementById('inputDateTime').value.replace('T', ' '),
-        customer: document.getElementById('inputCustomer').value.trim() || '未填寫',
-        origin: currentCalcData.origin,
-        dest: currentCalcData.dest,
-        weight: currentCalcData.weight,
-        cai: currentCalcData.cai,
-        pieces: currentCalcData.pieces,
-        systemFee: currentCalcData.systemFee,
-        actualFee: actualFee,
-        diffFee: diffFee >= 0 ? diffFee : `(${Math.abs(diffFee)})`,
-        jieFee: currentCalcData.jieFee,
-        songFee: currentCalcData.songFee,
-        teFee: currentCalcData.teFee,
-        tiaoFee: currentCalcData.tiaoFee,
-        lianFee: currentCalcData.lianFee
-      };
-
-      fetch(scriptUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }).then(() => {
-        alert("🎉 成功將運費紀錄寫入 Google 試算表！");
+    fetch(formUrl, {
+        method: "POST",
+        mode: "no-cors",
+        body: formData
+    }).then(() => {
+        alert("🎉 成功將運費紀錄送出！資料已自動同步至 Google 試算表！");
         btn.disabled = false;
         btn.innerHTML = `<i class="fa-solid fa-file-excel text-base"></i> <span>儲存帳務紀錄至 Google 試算表</span>`;
-      }).catch(err => {
-        alert("❌ 上傳失敗，請檢查網路或 Google Sheet 網址設定。");
+    }).catch(err => {
+        alert("❌ 上傳失敗，請檢查網路連線。");
         btn.disabled = false;
         btn.innerHTML = `<i class="fa-solid fa-file-excel text-base"></i> <span>儲存帳務紀錄至 Google 試算表</span>`;
-      });
-    }
+    });
+}
   </script>
 </body>
 </html>
