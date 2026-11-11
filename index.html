@@ -351,7 +351,7 @@
             }
         }
 
-        function saveToGoogleSheet() {
+function saveToGoogleSheet() {
             let url = document.getElementById('scriptUrl').value.trim();
             if(!url) {
                 alert('請先在上方「設定 Google Sheet 串接網址」填入 Apps Script 網址！');
@@ -360,60 +360,39 @@
             
             localStorage.setItem('hct_script_url', url);
 
-            let dt = document.getElementById('dateTime').value;
-            let customer = document.getElementById('customerName').value || '散客';
-            let origin = document.getElementById('origin').value;
-            let dest = document.getElementById('dest').value;
-            let weight = document.getElementById('weight').value;
-            let cai = document.getElementById('cai').value;
-            let pieces = document.getElementById('pieces').value;
-            let systemFee = document.getElementById('resTotal').innerText.replace('$', '');
-            let actualFee = document.getElementById('actualFee').value || systemFee;
-            
-            let actualNum = parseFloat(actualFee) || 0;
-            let sysNum = parseFloat(systemFee) || 0;
-            let diff = actualNum - sysNum;
-            let diffStr = diff >= 0 ? `+${diff}` : `(${Math.abs(diff)})`;
-
-            let jie = document.getElementById('jie').checked ? document.getElementById('resJie').innerText.replace('$', '') : '0';
-            let song = document.getElementById('song').checked ? document.getElementById('resSong').innerText.replace('$', '') : '0';
-            let te = document.getElementById('te').checked ? document.getElementById('resTe').innerText.replace('$', '') : '0';
-            let tiao = document.getElementById('tiao').checked ? '50' : '0';
-            let lian = document.getElementById('lian').checked ? '100' : '0';
-
-            let params = new URLSearchParams({
-                dateTime: dt,
-                customer: customer,
-                origin: origin,
-                dest: dest,
-                weight: weight,
-                cai: cai,
-                pieces: pieces,
-                systemFee: systemFee,
-                actualFee: actualFee,
-                diffFee: diffStr,
-                jieFee: jie,
-                songFee: song,
-                teFee: te,
-                tiaoFee: tiao,
-                lianFee: lian
-            });
-
-            let fullUrl = url + '?' + params.toString();
+            let payload = {
+                dateTime: document.getElementById('dateTime').value,
+                customer: document.getElementById('customerName').value || '散客',
+                origin: document.getElementById('origin').value,
+                dest: document.getElementById('dest').value,
+                weight: document.getElementById('weight').value,
+                cai: document.getElementById('cai').value,
+                pieces: document.getElementById('pieces').value,
+                systemFee: document.getElementById('resTotal').innerText.replace('$', ''),
+                actualFee: document.getElementById('actualFee').value || document.getElementById('resTotal').innerText.replace('$', ''),
+                diffFee: document.getElementById('diffFeeDisplay').innerText,
+                jieFee: document.getElementById('jie').checked ? document.getElementById('resJie').innerText.replace('$', '') : '0',
+                songFee: document.getElementById('song').checked ? document.getElementById('resSong').innerText.replace('$', '') : '0',
+                teFee: document.getElementById('te').checked ? document.getElementById('resTe').innerText.replace('$', '') : '0',
+                tiaoFee: document.getElementById('tiao').checked ? '50' : '0',
+                lianFee: document.getElementById('lian').checked ? '100' : '0'
+            };
 
             const btn = document.querySelector('.btn-submit');
             btn.innerText = '⏳ 正在儲存至 Google 試算表...';
             
-            fetch(fullUrl, { method: 'GET', mode: 'no-cors' })
-                .then(() => {
-                    alert('🎉 成功！紀錄已同步送出至 Google 試算表！');
-                    btn.innerText = '💾 儲存帳務紀錄至 Google 試算表';
-                })
-                .catch(err => {
-                    alert('❌ 傳送發生錯誤，請檢查網址是否正確。');
-                    btn.innerText = '💾 儲存帳務紀錄至 Google 試算表';
-                });
+            fetch(url, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                alert('🎉 成功！紀錄已成功透過 POST 傳送至 Google 試算表！');
+                btn.innerText = '💾 儲存帳務紀錄至 Google 試算表';
+            })
+            .catch(err => {
+                alert('❌ 傳送發生錯誤。');
+                btn.innerText = '💾 儲存帳務紀錄至 Google 試算表';
+            });
         }
-    </script>
-</body>
-</html>
