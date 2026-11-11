@@ -1,707 +1,419 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>新竹物流 運費速算與帳務紀錄器</title>
-  
-  <!-- iPhone 桌面 App 圖示 (Apple Touch Icon) -->
-  <link rel="apple-touch-icon" sizes="180x180" href="https://img.icons8.com/color/180/truck--v1.png">
-  <link rel="icon" type="image/png" href="https://img.icons8.com/color/180/truck--v1.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新竹物流 運費速算與帳務紀錄器</title>
+    <style>
+        :root {
+            --primary: #f36f21;
+            --primary-dark: #d85c13;
+            --bg-dark: #121824;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text-main); padding: 12px; max-width: 600px; margin: 0 auto; }
+        
+        .header { background: linear-gradient(135deg, var(--primary), #e65c00); padding: 16px; border-radius: 12px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(243,111,33,0.3); }
+        .header h1 { font-size: 20px; color: #fff; margin-bottom: 4px; }
+        .header p { font-size: 12px; color: rgba(255,255,255,0.9); }
+        
+        .config-box { background: var(--card-bg); border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-bottom: 15px; }
+        .config-box summary { font-size: 13px; color: var(--primary); cursor: pointer; font-weight: bold; }
+        .config-box input { width: 100%; padding: 8px; margin-top: 8px; background: #0f172a; border: 1px solid var(--border-color); color: #fff; border-radius: 6px; font-size: 12px; }
 
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; -webkit-tap-highlight-color: transparent; }
-    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    input[type=number] { -moz-appearance: textfield; }
-  </style>
+        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+        .card-title { font-size: 14px; color: var(--primary); font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        
+        .form-group { margin-bottom: 10px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        label { display: block; font-size: 12px; color: var(--text-sub); margin-bottom: 4px; }
+        input[type="text"], input[type="datetime-local"], select { width: 100%; padding: 10px; background: #0f172a; border: 1px solid var(--border-color); color: var(--text-main); border-radius: 8px; font-size: 14px; }
+        
+        .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .input-with-unit { position: relative; }
+        .input-with-unit input { width: 100%; padding-right: 35px; }
+        .input-with-unit span { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--text-sub); }
+
+        .stepper { display: flex; align-items: center; background: #0f172a; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
+        .stepper button { width: 40px; background: #334155; color: #fff; border: none; font-size: 16px; padding: 10px; cursor: pointer; }
+        .stepper button:active { background: var(--primary); }
+        .stepper input { text-align: center; border: none; background: transparent; color: #fff; width: 100%; font-size: 14px; }
+
+        .checkbox-group { display: grid; grid-template-columns: 1fr; gap: 8px; }
+        .checkbox-label { display: flex; align-items: center; background: #0f172a; border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+        .checkbox-label input { width: 18px; height: 18px; margin-right: 8px; accent-color: var(--primary); }
+        .checkbox-label span { margin-left: auto; color: var(--primary); font-weight: bold; }
+
+        .result-box { background: linear-gradient(135deg, #1e293b, #0f172a); border: 2px solid var(--primary); border-radius: 12px; padding: 14px; margin-top: 15px; }
+        .result-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; }
+        .result-total { border-top: 1px dashed var(--border-color); padding-top: 10px; margin-top: 10px; font-size: 18px; font-weight: bold; color: var(--primary); }
+        
+        .profit-pos { color: #22c55e; font-weight: bold; }
+        .profit-neg { color: #ef4444; font-weight: bold; }
+
+        .btn-submit { width: 100%; background: linear-gradient(135deg, #22c55e, #16a34a); color: white; border: none; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 4px 12px rgba(34,197,94,0.3); }
+        .btn-submit:active { transform: scale(0.98); }
+    </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen pb-12 flex justify-center selection:bg-orange-500 selection:text-white">
+<body>
 
-  <div class="w-full max-w-md bg-slate-900 min-h-screen flex flex-col shadow-2xl relative">
-    
-    <!-- Top Header -->
-    <header class="sticky top-0 z-30 bg-gradient-to-r from-orange-600 to-amber-500 px-5 py-4 shadow-lg flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <div class="w-12 h-9 rounded-full bg-gradient-to-r from-blue-600 to-blue-800 text-white font-black text-lg flex items-center justify-center shadow-md border border-blue-400/40 tracking-tighter italic">
-          <span class="text-lime-400">H</span><span>CT</span>
-        </div>
-        <div>
-          <h1 class="font-bold text-lg text-white leading-tight">新竹物流 運費帳務管理</h1>
-          <p class="text-xs text-orange-100 font-medium">107/08/01 費率與 Google Sheet 試算表同步版</p>
-        </div>
-      </div>
-      <button onclick="toggleApiModal()" class="bg-white/20 hover:bg-white/30 text-white text-xs px-2.5 py-1.5 rounded-lg font-medium transition flex items-center gap-1 border border-white/20">
-        <i class="fa-solid fa-gear"></i>
-        <span>Sheet設定</span>
-      </button>
-    </header>
-
-    <!-- Google Sheet Web App URL Modal -->
-    <div id="apiModal" class="hidden bg-slate-800 border-b border-orange-500/40 p-4 text-xs space-y-2">
-      <div class="flex justify-between items-center text-orange-400 font-bold">
-        <span><i class="fa-solid fa-link mr-1"></i>Google Apps Script Web App 網址設定</span>
-        <button onclick="toggleApiModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <input type="text" id="scriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono text-[11px] focus:outline-none focus:ring-1 focus:ring-orange-500">
-      <div class="flex justify-between items-center">
-        <span class="text-[10px] text-slate-400">貼上發布好的 App Script 網址，系統會自動儲存於本機</span>
-        <button onclick="saveScriptUrl()" class="bg-orange-500 text-white font-bold px-3 py-1 rounded-lg text-xs hover:bg-orange-600">儲存</button>
-      </div>
+    <div class="header">
+        <h1>新竹物流 運費帳務管理</h1>
+        <p>107/08/01 費率與 Google Sheet 試算表同步版</p>
     </div>
 
-    <!-- Main Content Area -->
-    <main class="flex-1 p-4 space-y-4 overflow-y-auto">
+    <!-- Apps Script 網址設定 -->
+    <details class="config-box">
+        <summary>⚙️ 設定 Google Sheet 串接網址</summary>
+        <input type="text" id="scriptUrl" placeholder="請貼上 Apps Script 網頁應用程式網址 (/exec)...">
+    </details>
 
-      <!-- 0. 帳務紀錄與客戶資料卡片 (老公新增需求 1 & 2) -->
-      <section class="bg-slate-800/90 rounded-2xl p-4 border border-orange-500/40 shadow-sm space-y-3">
-        <div class="flex items-center gap-2 text-orange-400 font-semibold text-sm">
-          <i class="fa-solid fa-user-pen text-base"></i>
-          <span>客戶報價與帳務紀錄資訊</span>
+    <!-- 帳務與客戶區 -->
+    <div class="card">
+        <div class="card-title">👤 客戶報價與帳務紀錄資訊</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>1. 日期時間 (自動/可更動)</label>
+                <input type="datetime-local" id="dateTime">
+            </div>
+            <div class="form-group">
+                <label>2. 客戶名稱 / 暱稱</label>
+                <input type="text" id="customerName" placeholder="例：牧牧貓砂">
+            </div>
         </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs text-slate-400 mb-1">1. 日期時間 (自動/可更動)</label>
-            <input type="datetime-local" id="inputDateTime" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-2.5 py-2 text-xs font-mono text-amber-300 focus:ring-2 focus:ring-orange-500 focus:outline-none">
-          </div>
-          <div>
-            <label class="block text-xs text-slate-400 mb-1">2. 客戶名稱 / 暱稱</label>
-            <input type="text" id="inputCustomer" placeholder="例：牧牧貓砂、林先生" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2 text-xs font-semibold text-white focus:ring-2 focus:ring-orange-500 focus:outline-none">
-          </div>
+        <div class="form-row" style="margin-top: 8px;">
+            <div class="form-group">
+                <label>3. 實收運費 (實際向客戶收)</label>
+                <input type="text" id="actualFee" placeholder="輸入實際收費" oninput="calculate()">
+            </div>
+            <div class="form-group">
+                <label>4. 多收 / (少收) 損益差額</label>
+                <div id="diffFeeDisplay" style="padding: 10px; background: #0f172a; border-radius: 8px; font-weight: bold; font-size: 14px; text-align: center;">$0</div>
+            </div>
         </div>
-      </section>
+    </div>
 
-      <!-- 1. 起終點營業所選擇 -->
-      <section class="bg-slate-800/90 rounded-2xl p-4 border border-slate-700/60 shadow-sm space-y-3">
-        <div class="flex items-center gap-2 text-orange-400 font-semibold text-sm">
-          <i class="fa-solid fa-route text-base"></i>
-          <span>起終點營業所選擇</span>
+    <!-- 起訖點 -->
+    <div class="card">
+        <div class="card-title">📍 起終點營業所選擇</div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>寄件營業所 (起點)</label>
+                <select id="origin" onchange="calculate()">
+                    <option value="南崁" selected>南崁</option>
+                    <option value="基隆">基隆</option>
+                    <option value="台北">台北</option>
+                    <option value="桃園">桃園</option>
+                    <option value="中壢">中壢</option>
+                    <option value="新竹">新竹</option>
+                    <option value="竹南">竹南</option>
+                    <option value="苗栗">苗栗</option>
+                    <option value="大甲">大甲</option>
+                    <option value="台中">台中</option>
+                    <option value="沙鹿">沙鹿</option>
+                    <option value="豐原">豐原</option>
+                    <option value="南投">南投</option>
+                    <option value="埔里">埔里</option>
+                    <option value="彰化">彰化</option>
+                    <option value="員林">員林</option>
+                    <option value="斗六">斗六</option>
+                    <option value="嘉義">嘉義</option>
+                    <option value="新營">新營</option>
+                    <option value="麻豆">麻豆</option>
+                    <option value="台南">台南</option>
+                    <option value="岡山">岡山</option>
+                    <option value="高雄">高雄</option>
+                    <option value="屏東">屏東</option>
+                    <option value="花蓮">花蓮</option>
+                    <option value="台東">台東</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>收件營業所 (終點)</label>
+                <select id="dest" onchange="calculate()">
+                    <option value="南崁" selected>南崁</option>
+                    <option value="基隆">基隆</option>
+                    <option value="台北">台北</option>
+                    <option value="桃園">桃園</option>
+                    <option value="中壢">中壢</option>
+                    <option value="新竹">新竹</option>
+                    <option value="竹南">竹南</option>
+                    <option value="苗栗">苗栗</option>
+                    <option value="大甲">大甲</option>
+                    <option value="台中">台中</option>
+                    <option value="沙鹿">沙鹿</option>
+                    <option value="豐原">豐原</option>
+                    <option value="南投">南投</option>
+                    <option value="埔里">埔里</option>
+                    <option value="彰化">彰化</option>
+                    <option value="員林">員林</option>
+                    <option value="斗六">斗六</option>
+                    <option value="嘉義">嘉義</option>
+                    <option value="新營">新營</option>
+                    <option value="麻豆">麻豆</option>
+                    <option value="台南">台南</option>
+                    <option value="岡山">岡山</option>
+                    <option value="高雄">高雄</option>
+                    <option value="屏東">屏東</option>
+                    <option value="花蓮">花蓮</option>
+                    <option value="台東">台東</option>
+                </select>
+            </div>
         </div>
+    </div>
 
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs text-slate-400 mb-1">寄件營業所 (起點)</label>
-            <select id="originSelect" onchange="calculate()" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2.5 text-sm font-medium text-white focus:ring-2 focus:ring-orange-500 focus:outline-none">
-            </select>
-          </div>
-          <div>
-            <label class="block text-xs text-slate-400 mb-1">收件營業所 (終點)</label>
-            <select id="destSelect" onchange="calculate()" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-3 py-2.5 text-sm font-medium text-white focus:ring-2 focus:ring-orange-500 focus:outline-none">
-            </select>
-          </div>
+    <!-- 貨物規格 -->
+    <div class="card">
+        <div class="card-title">📦 貨物規格與數量</div>
+        <div class="calc-grid">
+            <div class="form-group input-with-unit">
+                <label>單件實際重量 (kg)</label>
+                <input type="number" id="weight" value="10" oninput="calculate()">
+                <span>kg</span>
+            </div>
+            <div class="form-group input-with-unit">
+                <label>單件才數 (1才 = 10kg)</label>
+                <input type="number" id="cai" value="1" oninput="calculate()">
+                <span>才</span>
+            </div>
         </div>
-      </section>
-
-      <!-- 2. 貨物規格與數量卡片 -->
-      <section class="bg-slate-800/90 rounded-2xl p-4 border border-slate-700/60 shadow-sm space-y-3">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2 text-orange-400 font-semibold text-sm">
-            <i class="fa-solid fa-box text-base"></i>
-            <span>貨物規格與數量</span>
-          </div>
-          <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-700/50">
-            <button id="modeBtn1" onclick="switchMode('weight')" class="px-2.5 py-1 text-xs rounded-lg font-medium transition bg-orange-500 text-white shadow">重量 / 才數</button>
-            <button id="modeBtn2" onclick="switchMode('dim')" class="px-2.5 py-1 text-xs rounded-lg font-medium transition text-slate-400 hover:text-slate-200">長寬高試算</button>
-          </div>
+        <div class="form-group" style="margin-top: 10px;">
+            <label>同規格總件數</label>
+            <div class="stepper">
+                <button type="button" onclick="adjustPieces(-1)">-</button>
+                <input type="number" id="pieces" value="1" oninput="calculate()">
+                <button type="button" onclick="adjustPieces(1)">+</button>
+            </div>
         </div>
+    </div>
 
-        <!-- Mode A: 直接輸入 重量/才數 (預設: 10kg / 1才) -->
-        <div id="modeWeightArea" class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block text-xs text-slate-400 mb-1">單件實際重量 (kg)</label>
-            <div class="relative">
-              <input type="number" id="inputWeight" value="10" min="0" step="0.1" oninput="onWeightInput()" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl pl-3 pr-8 py-2.5 text-sm font-bold text-amber-400 focus:ring-2 focus:ring-orange-500 focus:outline-none">
-              <span class="absolute right-3 top-2.5 text-xs text-slate-500">kg</span>
-            </div>
-          </div>
-          <div>
-            <label class="block text-xs text-slate-400 mb-1">單件才數 (1才 = 10kg)</label>
-            <div class="relative">
-              <input type="number" id="inputCai" value="1" min="0" step="1" oninput="onCaiInput()" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl pl-3 pr-8 py-2.5 text-sm font-bold text-amber-400 focus:ring-2 focus:ring-orange-500 focus:outline-none">
-              <span class="absolute right-3 top-2.5 text-xs text-slate-500">才</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Mode B: 長寬高試算才數 -->
-        <div id="modeDimArea" class="hidden space-y-2">
-          <div class="grid grid-cols-3 gap-2">
-            <div>
-              <label class="block text-xs text-slate-400 mb-1">長 (cm)</label>
-              <input type="number" id="dimL" value="45" min="0" oninput="calcDim()" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-2.5 py-2 text-sm text-center font-semibold text-white focus:ring-2 focus:ring-orange-500 focus:outline-none">
-            </div>
-            <div>
-              <label class="block text-xs text-slate-400 mb-1">寬 (cm)</label>
-              <input type="number" id="dimW" value="30" min="0" oninput="calcDim()" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-2.5 py-2 text-sm text-center font-semibold text-white focus:ring-2 focus:ring-orange-500 focus:outline-none">
-            </div>
-            <div>
-              <label class="block text-xs text-slate-400 mb-1">高 (cm)</label>
-              <input type="number" id="dimH" value="20" min="0" oninput="calcDim()" class="w-full bg-slate-900/80 border border-slate-700 rounded-xl px-2.5 py-2 text-sm text-center font-semibold text-white focus:ring-2 focus:ring-orange-500 focus:outline-none">
-            </div>
-          </div>
-          <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-700/40 text-xs text-slate-300 space-y-1">
-            <div class="flex justify-between">
-              <span>精確計算才數：</span>
-              <span id="dimExactDisplay" class="font-mono text-slate-400">1.0 才</span>
-            </div>
-            <div class="flex justify-between text-orange-400 font-semibold">
-              <span>無條件進位整數才：</span>
-              <span id="dimCeilDisplay" class="font-bold">1 才 (10.0 kg)</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 件數調整選單 (預設: 1件) -->
-        <div class="pt-2 border-t border-slate-700/50 flex items-center justify-between">
-          <span class="text-xs font-medium text-slate-300">同規格總件數</span>
-          <div class="flex items-center space-x-2 bg-slate-900 rounded-xl p-1 border border-slate-700">
-            <button onclick="changePiece(-1)" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold flex items-center justify-center transition">-</button>
-            <input type="number" id="pieceCount" value="1" min="1" onchange="calculate()" class="w-12 text-center bg-transparent font-bold text-sm text-amber-400 focus:outline-none">
-            <button onclick="changePiece(1)" class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold flex items-center justify-center transition">+</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- 3. 加價服務 -->
-      <section class="bg-slate-800/90 rounded-2xl p-4 border border-slate-700/60 shadow-sm space-y-3">
-        <div class="flex items-center gap-2 text-orange-400 font-semibold text-sm">
-          <i class="fa-solid fa-list-check text-base"></i>
-          <span>附加服務與特殊費用</span>
-        </div>
-
-        <div class="space-y-2 text-xs">
-          <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/50 cursor-pointer">
-            <div class="flex items-center gap-2">
-              <input type="checkbox" id="chkJie" checked onchange="calculate()" class="w-4 h-4 rounded text-orange-500 accent-orange-500">
-              <div>
-                <div class="font-medium text-slate-200">派單收件 (接費)</div>
-                <div class="text-[10px] text-slate-400">每百公斤 $37，依才數起碼對照</div>
-              </div>
-            </div>
-            <span id="jieFeeDisplay" class="font-bold text-slate-300">$27.0</span>
-          </label>
-
-          <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/50 cursor-pointer">
-            <div class="flex items-center gap-2">
-              <input type="checkbox" id="chkSong" checked onchange="calculate()" class="w-4 h-4 rounded text-orange-500 accent-orange-500">
-              <div>
-                <div class="font-medium text-slate-200">派送費 (送費)</div>
-                <div class="text-[10px] text-slate-400">每百公斤 $37，依才數起碼對照</div>
-              </div>
-            </div>
-            <span id="songFeeDisplay" class="font-bold text-slate-300">$27.0</span>
-          </label>
-
-          <!-- 特殊服務費 (預設：不勾選) -->
-          <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/50 cursor-pointer">
-            <div class="flex items-center gap-2">
-              <input type="checkbox" id="chkTe" onchange="calculate()" class="w-4 h-4 rounded text-orange-500 accent-orange-500">
-              <div>
-                <div class="font-medium text-slate-200">特殊服務費 (2樓以上/地下室)</div>
-                <div class="text-[10px] text-slate-400">每百公斤 $60，依才數起碼對照</div>
-              </div>
-            </div>
-            <span id="teFeeDisplay" class="font-bold text-slate-300">$0.0</span>
-          </label>
-
-          <div id="tiaoContainer" class="hidden">
-            <label class="flex items-center justify-between p-2.5 rounded-xl bg-amber-950/40 border border-amber-600/40 cursor-pointer">
-              <div class="flex items-center gap-2">
-                <input type="checkbox" id="chkTiao" onchange="calculate()" class="w-4 h-4 rounded text-amber-500 accent-amber-500">
-                <div>
-                  <div class="font-medium text-amber-200">基隆/八堵地區 (挑挽工資)</div>
-                  <div class="text-[10px] text-amber-400/80">每百公斤 $10，起碼 $6</div>
-                </div>
-              </div>
-              <span id="tiaoFeeDisplay" class="font-bold text-amber-300">$0.0</span>
+    <!-- 附加服務 -->
+    <div class="card">
+        <div class="card-title">📋 附加服務與特殊費用</div>
+        <div class="checkbox-group">
+            <label class="checkbox-label">
+                <input type="checkbox" id="jie" onchange="calculate()"> 派單收件 (接費) <span id="jiePrice">$37</span>
             </label>
-          </div>
-
-          <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-700/50 space-y-2">
-            <label class="flex items-center justify-between cursor-pointer">
-              <div class="flex items-center gap-2">
-                <input type="checkbox" id="chkLian" onchange="toggleLianInput()" class="w-4 h-4 rounded text-orange-500 accent-orange-500">
-                <span class="font-medium text-slate-200">偏遠/困難點/轉外車 (聯運費)</span>
-              </div>
-              <span class="text-[10px] text-rose-400 font-medium">免計送費與特服費</span>
+            <label class="checkbox-label">
+                <input type="checkbox" id="song" onchange="calculate()"> 派送 (送費) <span id="songPrice">$37</span>
             </label>
-            <div id="lianInputWrap" class="hidden pl-6 pt-1">
-              <div class="flex items-center gap-2">
-                <span class="text-xs text-slate-400">單件聯運費金額:</span>
-                <input type="number" id="inputLian" value="0" min="0" oninput="calculate()" class="w-24 bg-slate-800 border border-slate-600 rounded-lg px-2 py-1 text-xs text-amber-300 font-bold focus:outline-none">
-                <span class="text-xs text-slate-400">元</span>
-              </div>
-            </div>
-          </div>
+            <label class="checkbox-label">
+                <input type="checkbox" id="te" onchange="calculate()"> 特殊服務費 (樓層/地下室) <span id="tePrice">$60</span>
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox" id="tiao" onchange="calculate()"> 挑挽工資 <span id="tiaoPrice">$50</span>
+            </label>
+            <label class="checkbox-label">
+                <input type="checkbox" id="lian" onchange="calculate()"> 聯運費 <span id="lianPrice">$100</span>
+            </label>
         </div>
-      </section>
+    </div>
 
-      <!-- 4. 費用明細與實收損益比對區 (老公需求 3, 4, 5) -->
-      <section class="bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-5 border border-orange-500/30 shadow-xl space-y-4">
-        <div class="text-center pb-3 border-b border-slate-700/60">
-          <div class="flex justify-center items-center gap-2 text-xs text-slate-400 mb-1">
-            <span>系統算定運費 (含5%營業稅)</span>
-            <span id="calcWeightTag" class="bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded-full font-mono text-[10px]">0.1 百公斤 (W)</span>
-          </div>
-          <div id="totalPriceDisplay" class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-orange-400 to-amber-200">
-            $ 104
-          </div>
-          <div id="perPieceDisplay" class="text-xs text-slate-400 mt-1">單件平均: $104</div>
+    <!-- 計算結果 -->
+    <div class="result-box">
+        <div class="result-row"><span>計費公式說明：</span><span id="formulaDesc" style="font-size: 11px; color: var(--text-sub);"></span></div>
+        <div class="result-row"><span>接費：</span><span id="resJie">$37</span></div>
+        <div class="result-row"><span>本段運費 (基本)：</span><span id="resBase">$65</span></div>
+        <div class="result-row"><span>送費：</span><span id="resSong">$37</span></div>
+        <div class="result-row"><span>特殊服務費：</span><span id="resTe">$0</span></div>
+        <div class="result-total flex-row">
+            <span>系統估算總運費</span>
+            <span id="resTotal">$139</span>
         </div>
+    </div>
 
-        <!-- 實收金額與多收/少收動態試算 (老公需求 3 & 4) -->
-        <div class="bg-slate-950/80 p-3.5 rounded-xl border border-amber-500/40 space-y-3">
-          <div class="flex justify-between items-center">
-            <span class="text-xs font-bold text-amber-400 flex items-center gap-1">
-              <i class="fa-solid fa-hand-holding-dollar"></i> 3. 實際向客戶收取金額：
-            </span>
-            <div class="relative w-32">
-              <span class="absolute left-2.5 top-1.5 text-xs text-slate-400">$</span>
-              <input type="number" id="inputActualFee" oninput="calcDifference()" class="w-full bg-slate-900 border border-amber-500/60 rounded-lg pl-6 pr-2 py-1 text-sm font-bold text-emerald-400 focus:outline-none focus:ring-1 focus:ring-amber-500">
-            </div>
-          </div>
+    <button class="btn-submit" onclick="saveToGoogleSheet()">💾 儲存帳務紀錄至 Google 試算表</button>
 
-          <div class="flex justify-between items-center text-xs pt-2 border-t border-slate-800">
-            <span class="text-slate-400">4. 多收 / (少收) 損益差額：</span>
-            <span id="diffFeeDisplay" class="font-bold text-sm font-mono text-emerald-400">$0</span>
-          </div>
-        </div>
+    <script>
+        // 完整的 107/08/01 新竹物流標準費率矩陣表
+        const RAW_RATE_LIST = [
+            ["基隆", "基隆", 50, 65], ["基隆", "台北", 50, 65], ["基隆", "桃園", 55, 95], ["基隆", "中壢", 55, 130], ["基隆", "新竹", 55, 150], ["基隆", "竹南", 55, 150], ["基隆", "苗栗", 75, 185], ["基隆", "大甲", 85, 220], ["基隆", "台中", 90, 255], ["基隆", "沙鹿", 90, 255], ["基隆", "豐原", 95, 275], ["基隆", "南投", 95, 275], ["基隆", "埔里", 100, 290], ["基隆", "彰化", 90, 255], ["基隆", "員林", 95, 275], ["基隆", "斗六", 105, 320], ["基隆", "嘉義", 135, 390], ["基隆", "新營", 120, 345], ["基隆", "麻豆", 130, 365], ["基隆", "台南", 135, 390], ["基隆", "岡山", 140, 415], ["基隆", "高雄", 145, 455], ["基隆", "屏東", 165, 510], ["基隆", "花蓮", 65, 195], ["基隆", "台東", 175, 560],
+            ["台北", "基隆", 50, 65], ["台北", "台北", 50, 65], ["台北", "桃園", 50, 65], ["台北", "中壢", 55, 95], ["台北", "新竹", 55, 130], ["台北", "竹南", 55, 150], ["台北", "苗栗", 75, 185], ["台北", "大甲", 85, 220], ["台北", "台中", 90, 255], ["台北", "沙鹿", 85, 220], ["台北", "豐原", 95, 275], ["台北", "南投", 95, 275], ["台北", "埔里", 100, 290], ["台北", "彰化", 90, 255], ["台北", "員林", 95, 275], ["台北", "斗六", 105, 320], ["台北", "嘉義", 135, 390], ["台北", "新營", 120, 345], ["台北", "麻豆", 130, 365], ["台北", "台南", 135, 390], ["台北", "岡山", 140, 415], ["台北", "高雄", 145, 455], ["台北", "屏東", 165, 510], ["台北", "花蓮", 105, 290], ["台北", "台東", 175, 560],
+            ["桃園", "基隆", 75, 185], ["桃園", "台北", 50, 65], ["桃園", "桃園", 50, 65], ["桃園", "中壢", 55, 95], ["桃園", "新竹", 55, 130], ["桃園", "竹南", 55, 130], ["桃園", "苗栗", 55, 130], ["桃園", "大甲", 75, 220], ["桃園", "台中", 75, 220], ["桃園", "沙鹿", 75, 220], ["桃園", "豐原", 85, 255], ["桃園", "南投", 85, 255], ["桃園", "埔里", 90, 275], ["桃園", "彰化", 85, 255], ["桃園", "員林", 85, 255], ["桃園", "斗六", 95, 295], ["桃園", "嘉義", 100, 320], ["桃園", "新營", 100, 320], ["桃園", "麻豆", 105, 345], ["桃園", "台南", 120, 365], ["桃園", "岡山", 130, 390], ["桃園", "高雄", 135, 415], ["桃園", "屏東", 135, 415], ["桃園", "花蓮", 120, 320], ["桃園", "台東", 175, 560],
+            ["中壢", "基隆", 85, 220], ["中壢", "台北", 55, 95], ["中壢", "桃園", 55, 95], ["中壢", "中壢", 50, 65], ["中壢", "新竹", 55, 95], ["中壢", "竹南", 55, 130], ["中壢", "苗栗", 55, 130], ["中壢", "大甲", 75, 220], ["中壢", "台中", 75, 220], ["中壢", "沙鹿", 75, 220], ["中壢", "豐原", 85, 255], ["中壢", "南投", 85, 255], ["中壢", "埔里", 90, 275], ["中壢", "彰化", 85, 255], ["中壢", "員林", 85, 255], ["中壢", "斗六", 95, 295], ["中壢", "嘉義", 100, 320], ["中壢", "新營", 100, 320], ["中壢", "麻豆", 105, 345], ["中壢", "台南", 120, 365], ["中壢", "岡山", 130, 390], ["中壢", "高雄", 135, 415], ["中壢", "屏東", 135, 415], ["中壢", "花蓮", 120, 320], ["中壢", "台東", 175, 560],
+            ["新竹", "基隆", 90, 255], ["新竹", "台北", 55, 130], ["新竹", "桃園", 55, 130], ["新竹", "中壢", 55, 95], ["新竹", "新竹", 50, 65], ["新竹", "竹南", 50, 65], ["新竹", "苗栗", 55, 95], ["新竹", "大甲", 65, 185], ["新竹", "台中", 75, 220], ["新竹", "沙鹿", 75, 220], ["新竹", "豐原", 85, 255], ["新竹", "南投", 85, 255], ["新竹", "埔里", 90, 275], ["新竹", "彰化", 85, 255], ["新竹", "員林", 85, 255], ["新竹", "斗六", 95, 295], ["新竹", "嘉義", 100, 320], ["新竹", "新營", 100, 320], ["新竹", "麻豆", 105, 345], ["新竹", "台南", 120, 365], ["新竹", "岡山", 130, 390], ["新竹", "高雄", 135, 415], ["新竹", "屏東", 135, 415], ["新竹", "花蓮", 135, 365], ["新竹", "台東", 175, 560],
+            ["竹南", "基隆", 90, 255], ["竹南", "台北", 55, 150], ["竹南", "桃園", 55, 130], ["竹南", "中壢", 55, 130], ["竹南", "新竹", 50, 65], ["竹南", "竹南", 50, 65], ["竹南", "苗栗", 50, 65], ["竹南", "大甲", 65, 150], ["竹南", "台中", 75, 185], ["竹南", "沙鹿", 75, 185], ["竹南", "豐原", 85, 220], ["竹南", "南投", 85, 220], ["竹南", "埔里", 90, 255], ["竹南", "彰化", 85, 220], ["竹南", "員林", 85, 220], ["竹南", "斗六", 95, 275], ["竹南", "嘉義", 100, 295], ["竹南", "新營", 100, 295], ["竹南", "麻豆", 105, 320], ["竹南", "台南", 115, 345], ["竹南", "岡山", 125, 365], ["竹南", "高雄", 130, 390], ["竹南", "屏東", 130, 390], ["竹南", "花蓮", 140, 390], ["竹南", "台東", 175, 560],
+            ["苗栗", "基隆", 95, 275], ["苗栗", "台北", 75, 185], ["苗栗", "桃園", 55, 130], ["苗栗", "中壢", 55, 130], ["苗栗", "新竹", 55, 95], ["苗栗", "竹南", 50, 65], ["苗栗", "苗栗", 50, 65], ["苗栗", "大甲", 65, 150], ["苗栗", "台中", 75, 185], ["苗栗", "沙鹿", 75, 185], ["苗栗", "豐原", 85, 220], ["苗栗", "南投", 85, 220], ["苗栗", "埔里", 90, 255], ["苗栗", "彰化", 85, 220], ["苗栗", "員林", 85, 220], ["苗栗", "斗六", 95, 275], ["苗栗", "嘉義", 100, 295], ["苗栗", "新營", 100, 295], ["苗栗", "麻豆", 105, 320], ["苗栗", "台南", 115, 345], ["苗栗", "岡山", 125, 365], ["苗栗", "高雄", 130, 390], ["苗栗", "屏東", 130, 390], ["苗栗", "花蓮", 140, 390], ["苗栗", "台東", 175, 560],
+            ["大甲", "基隆", 105, 320], ["大甲", "台北", 85, 220], ["大甲", "桃園", 75, 220], ["大甲", "中壢", 75, 220], ["大甲", "新竹", 65, 185], ["大甲", "竹南", 65, 150], ["大甲", "苗栗", 65, 150], ["大甲", "大甲", 50, 65], ["大甲", "台中", 55, 95], ["大甲", "沙鹿", 55, 95], ["大甲", "豐原", 65, 130], ["大甲", "南投", 75, 185], ["大甲", "埔里", 85, 220], ["大甲", "彰化", 65, 130], ["大甲", "員林", 75, 150], ["大甲", "斗六", 85, 220], ["大甲", "嘉義", 95, 255], ["大甲", "新營", 95, 255], ["大甲", "麻豆", 100, 275], ["大甲", "台南", 105, 295], ["大甲", "岡山", 115, 320], ["大甲", "高雄", 120, 345], ["大甲", "屏東", 125, 365], ["大甲", "花蓮", 150, 415], ["大甲", "台東", 175, 560],
+            ["台中", "基隆", 105, 320], ["台中", "台北", 90, 255], ["台中", "桃園", 75, 220], ["台中", "中壢", 75, 220], ["台中", "新竹", 75, 220], ["台中", "竹南", 75, 185], ["台中", "苗栗", 75, 185], ["台中", "大甲", 55, 95], ["台中", "台中", 50, 65], ["台中", "沙鹿", 55, 95], ["台中", "豐原", 55, 95], ["台中", "南投", 65, 130], ["台中", "埔里", 75, 185], ["台中", "彰化", 55, 95], ["台中", "員林", 65, 130], ["台中", "斗六", 75, 185], ["台中", "嘉義", 85, 220], ["台中", "新營", 85, 220], ["台中", "麻豆", 90, 255], ["台中", "台南", 95, 275], ["台中", "岡山", 105, 295], ["台中", "高雄", 110, 320], ["台中", "屏東", 115, 345], ["台中", "花蓮", 150, 415], ["台中", "台東", 175, 560],
+            ["沙鹿", "基隆", 105, 320], ["沙鹿", "台北", 85, 220], ["沙鹿", "桃園", 75, 220], ["沙鹿", "中壢", 75, 220], ["沙鹿", "新竹", 75, 220], ["沙鹿", "竹南", 75, 185], ["沙鹿", "苗栗", 75, 185], ["沙鹿", "大甲", 55, 95], ["沙鹿", "台中", 55, 95], ["沙鹿", "沙鹿", 50, 65], ["沙鹿", "豐原", 65, 130], ["沙鹿", "南投", 75, 185], ["沙鹿", "埔里", 85, 220], ["沙鹿", "彰化", 65, 130], ["沙鹿", "員林", 75, 150], ["沙鹿", "斗六", 85, 220], ["沙鹿", "嘉義", 95, 255], ["沙鹿", "新營", 95, 255], ["沙鹿", "麻豆", 100, 275], ["沙鹿", "台南", 105, 295], ["沙鹿", "岡山", 115, 320], ["沙鹿", "高雄", 120, 345], ["沙鹿", "屏東", 125, 365], ["沙鹿", "花蓮", 150, 415], ["沙鹿", "台東", 175, 560],
+            ["豐原", "基隆", 105, 320], ["豐原", "台北", 95, 275], ["豐原", "桃園", 85, 255], ["豐原", "中壢", 85, 255], ["豐原", "新竹", 85, 255], ["豐原", "竹南", 85, 220], ["豐原", "苗栗", 85, 220], ["豐原", "大甲", 65, 130], ["豐原", "台中", 55, 95], ["豐原", "沙鹿", 65, 130], ["豐原", "豐原", 50, 65], ["豐原", "南投", 65, 130], ["豐原", "埔里", 75, 185], ["豐原", "彰化", 65, 130], ["豐原", "員林", 75, 150], ["豐原", "斗六", 85, 220], ["豐原", "嘉義", 95, 255], ["豐原", "新營", 95, 255], ["豐原", "麻豆", 100, 275], ["豐原", "台南", 105, 295], ["豐原", "岡山", 115, 320], ["豐原", "高雄", 120, 345], ["豐原", "屏東", 125, 365], ["豐原", "花蓮", 150, 415], ["豐原", "台東", 175, 560],
+            ["南投", "基隆", 105, 320], ["南投", "台北", 95, 275], ["南投", "桃園", 85, 255], ["南投", "中壢", 85, 255], ["南投", "新竹", 85, 255], ["南投", "竹南", 85, 220], ["南投", "苗栗", 85, 220], ["南投", "大甲", 75, 185], ["南投", "台中", 65, 130], ["南投", "沙鹿", 75, 185], ["南投", "豐原", 65, 130], ["南投", "南投", 50, 65], ["南投", "埔里", 65, 130], ["南投", "彰化", 65, 130], ["南投", "員林", 65, 130], ["南投", "斗六", 75, 185], ["南投", "嘉義", 85, 220], ["南投", "新營", 85, 220], ["南投", "麻豆", 90, 255], ["南投", "台南", 95, 275], ["南投", "岡山", 105, 295], ["南投", "高雄", 110, 320], ["南投", "屏東", 115, 345], ["南投", "花蓮", 150, 415], ["南投", "台東", 175, 560],
+            ["埔里", "基隆", 110, 345], ["埔里", "台北", 100, 290], ["埔里", "桃園", 90, 275], ["埔里", "中壢", 90, 275], ["埔里", "新竹", 90, 275], ["埔里", "竹南", 90, 255], ["埔里", "苗栗", 90, 255], ["埔里", "大甲", 85, 220], ["埔里", "台中", 75, 185], ["埔里", "沙鹿", 85, 220], ["埔里", "豐原", 75, 185], ["埔里", "南投", 65, 130], ["埔里", "埔里", 50, 65], ["埔里", "彰化", 75, 185], ["埔里", "員林", 75, 185], ["埔里", "斗六", 85, 220], ["埔里", "嘉義", 95, 255], ["埔里", "新營", 95, 255], ["埔里", "麻豆", 100, 275], ["埔里", "台南", 105, 295], ["埔里", "岡山", 115, 320], ["埔里", "高雄", 120, 345], ["埔里", "屏東", 125, 365], ["埔里", "花蓮", 150, 415], ["埔里", "台東", 175, 560],
+            ["彰化", "基隆", 105, 320], ["彰化", "台北", 90, 255], ["彰化", "桃園", 85, 255], ["彰化", "中壢", 85, 255], ["彰化", "新竹", 85, 255], ["彰化", "竹南", 85, 220], ["彰化", "苗栗", 85, 220], ["彰化", "大甲", 65, 130], ["彰化", "台中", 55, 95], ["彰化", "沙鹿", 65, 130], ["彰化", "豐原", 65, 130], ["彰化", "南投", 65, 130], ["彰化", "埔里", 75, 185], ["彰化", "彰化", 50, 65], ["彰化", "員林", 55, 95], ["彰化", "斗六", 65, 130], ["彰化", "嘉義", 75, 185], ["彰化", "新營", 75, 185], ["彰化", "麻豆", 85, 220], ["彰化", "台南", 90, 255], ["彰化", "岡山", 100, 275], ["彰化", "高雄", 105, 295], ["彰化", "屏東", 110, 320], ["彰化", "花蓮", 150, 415], ["彰化", "台東", 175, 560],
+            ["員林", "基隆", 105, 320], ["員林", "台北", 95, 275], ["員林", "桃園", 85, 255], ["員林", "中壢", 85, 255], ["員林", "新竹", 85, 255], ["員林", "竹南", 85, 220], ["員林", "苗栗", 85, 220], ["員林", "大甲", 75, 150], ["員林", "台中", 65, 130], ["員林", "沙鹿", 75, 150], ["員林", "豐原", 75, 150], ["員林", "南投", 65, 130], ["員林", "埔里", 75, 185], ["員林", "彰化", 55, 95], ["員林", "員林", 50, 65], ["員林", "斗六", 65, 130], ["員林", "嘉義", 75, 185], ["員林", "新營", 75, 185], ["員林", "麻豆", 85, 220], ["員林", "台南", 90, 255], ["員林", "岡山", 100, 275], ["員林", "高雄", 105, 295], ["員林", "屏東", 110, 320], ["員林", "花蓮", 150, 415], ["員林", "台東", 175, 560],
+            ["斗六", "基隆", 115, 365], ["斗六", "台北", 105, 320], ["斗六", "桃園", 95, 295], ["斗六", "中壢", 95, 295], ["斗六", "新竹", 95, 295], ["斗六", "竹南", 95, 275], ["斗六", "苗栗", 95, 275], ["斗六", "大甲", 85, 220], ["斗六", "台中", 75, 185], ["斗六", "沙鹿", 85, 220], ["斗六", "豐原", 85, 220], ["斗六", "南投", 75, 185], ["斗六", "埔里", 85, 220], ["斗六", "彰化", 65, 130], ["斗六", "員林", 65, 130], ["斗六", "斗六", 50, 65], ["斗六", "嘉義", 65, 130], ["斗六", "新營", 65, 130], ["斗六", "麻豆", 75, 185], ["斗六", "台南", 85, 220], ["斗六", "岡山", 95, 255], ["斗六", "高雄", 100, 275], ["斗六", "屏東", 105, 295], ["斗六", "花蓮", 150, 415], ["斗六", "台東", 175, 560],
+            ["嘉義", "基隆", 125, 415], ["嘉義", "台北", 115, 390], ["嘉義", "桃園", 100, 320], ["嘉義", "中壢", 100, 320], ["嘉義", "新竹", 100, 320], ["嘉義", "竹南", 100, 295], ["嘉義", "苗栗", 100, 295], ["嘉義", "大甲", 95, 255], ["嘉義", "台中", 85, 220], ["嘉義", "沙鹿", 95, 255], ["嘉義", "豐原", 95, 255], ["嘉義", "南投", 85, 220], ["嘉義", "埔里", 95, 255], ["嘉義", "彰化", 75, 185], ["嘉義", "員林", 75, 185], ["嘉義", "斗六", 65, 130], ["嘉義", "嘉義", 50, 65], ["嘉義", "新營", 55, 95], ["嘉義", "麻豆", 65, 130], ["嘉義", "台南", 75, 185], ["嘉義", "岡山", 85, 220], ["嘉義", "高雄", 90, 255], ["嘉義", "屏東", 95, 275], ["嘉義", "花蓮", 150, 415], ["嘉義", "台東", 175, 560],
+            ["新營", "基隆", 125, 415], ["新營", "台北", 115, 345], ["新營", "桃園", 100, 320], ["新營", "中壢", 100, 320], ["新營", "新竹", 100, 320], ["新營", "竹南", 100, 295], ["新營", "苗栗", 100, 295], ["新營", "大甲", 95, 255], ["新營", "台中", 85, 220], ["新營", "沙鹿", 95, 255], ["新營", "豐原", 95, 255], ["新營", "南投", 85, 220], ["新營", "埔里", 95, 255], ["新營", "彰化", 75, 185], ["新營", "員林", 75, 185], ["新營", "斗六", 65, 130], ["新營", "嘉義", 55, 95], ["新營", "新營", 50, 65], ["新營", "麻豆", 55, 95], ["新營", "台南", 65, 130], ["新營", "岡山", 75, 185], ["新營", "高雄", 85, 220], ["新營", "屏東", 90, 255], ["新營", "花蓮", 150, 415], ["新營", "台東", 175, 560],
+            ["麻豆", "基隆", 135, 455], ["麻豆", "台北", 125, 365], ["麻豆", "桃園", 105, 345], ["麻豆", "中壢", 105, 345], ["麻豆", "新竹", 105, 345], ["麻豆", "竹南", 105, 320], ["麻豆", "苗栗", 105, 320], ["麻豆", "大甲", 100, 275], ["麻豆", "台中", 90, 255], ["麻豆", "沙鹿", 100, 275], ["麻豆", "豐原", 100, 275], ["麻豆", "南投", 90, 255], ["麻豆", "埔里", 100, 275], ["麻豆", "彰化", 85, 220], ["麻豆", "員林", 85, 220], ["麻豆", "斗六", 75, 185], ["麻豆", "嘉義", 65, 130], ["麻豆", "新營", 55, 95], ["麻豆", "麻豆", 50, 65], ["麻豆", "台南", 55, 95], ["麻豆", "岡山", 65, 130], ["麻豆", "高雄", 75, 185], ["麻豆", "屏東", 85, 220], ["麻豆", "花蓮", 150, 415], ["麻豆", "台東", 175, 560],
+            ["台南", "基隆", 145, 485], ["台南", "台北", 135, 390], ["台南", "桃園", 120, 365], ["台南", "中壢", 120, 365], ["台南", "新竹", 120, 365], ["台南", "竹南", 115, 345], ["台南", "苗栗", 115, 345], ["台南", "大甲", 105, 295], ["台南", "台中", 95, 275], ["台南", "沙鹿", 105, 295], ["台南", "豐原", 105, 295], ["台南", "南投", 95, 275], ["台南", "埔里", 105, 295], ["台南", "彰化", 90, 255], ["台南", "員林", 90, 255], ["台南", "斗六", 85, 220], ["台南", "嘉義", 75, 185], ["台南", "新營", 65, 130], ["台南", "麻豆", 55, 95], ["台南", "台南", 50, 65], ["台南", "岡山", 55, 95], ["台南", "高雄", 65, 130], ["台南", "屏東", 75, 185], ["台南", "花蓮", 150, 415], ["台南", "台東", 175, 560],
+            ["岡山", "基隆", 150, 510], ["岡山", "台北", 140, 415], ["岡山", "桃園", 130, 390], ["岡山", "中壢", 130, 390], ["岡山", "新竹", 130, 390], ["岡山", "竹南", 125, 365], ["岡山", "苗栗", 125, 365], ["岡山", "大甲", 115, 320], ["岡山", "台中", 105, 295], ["岡山", "沙鹿", 115, 320], ["岡山", "豐原", 115, 320], ["岡山", "南投", 105, 295], ["岡山", "埔里", 115, 320], ["岡山", "彰化", 100, 275], ["岡山", "員林", 100, 275], ["岡山", "斗六", 95, 255], ["岡山", "嘉義", 85, 220], ["岡山", "新營", 75, 185], ["岡山", "麻豆", 65, 130], ["岡山", "台南", 55, 95], ["岡山", "岡山", 50, 65], ["岡山", "高雄", 55, 95], ["岡山", "屏東", 65, 130], ["岡山", "花蓮", 150, 415], ["岡山", "台東", 175, 560],
+            ["高雄", "基隆", 160, 535], ["高雄", "台北", 145, 455], ["高雄", "桃園", 135, 415], ["高雄", "中壢", 135, 415], ["高雄", "新竹", 135, 415], ["高雄", "竹南", 130, 390], ["高雄", "苗栗", 130, 390], ["高雄", "大甲", 120, 345], ["高雄", "台中", 110, 320], ["高雄", "沙鹿", 120, 345], ["高雄", "豐原", 120, 345], ["高雄", "南投", 110, 320], ["高雄", "埔里", 120, 345], ["高雄", "彰化", 105, 295], ["高雄", "員林", 105, 295], ["高雄", "斗六", 100, 275], ["高雄", "嘉義", 90, 255], ["高雄", "新營", 85, 220], ["高雄", "麻豆", 75, 185], ["高雄", "台南", 65, 130], ["高雄", "岡山", 55, 95], ["高雄", "高雄", 50, 65], ["高雄", "屏東", 55, 95], ["高雄", "花蓮", 150, 415], ["高雄", "台東", 175, 560],
+            ["屏東", "基隆", 165, 550], ["屏東", "台北", 165, 510], ["屏東", "桃園", 135, 415], ["屏東", "中壢", 135, 415], ["屏東", "新竹", 135, 415], ["屏東", "竹南", 130, 390], ["屏東", "苗栗", 130, 390], ["屏東", "大甲", 125, 365], ["屏東", "台中", 115, 345], ["屏東", "沙鹿", 125, 365], ["屏東", "豐原", 125, 365], ["屏東", "南投", 115, 345], ["屏東", "埔里", 125, 365], ["屏東", "彰化", 110, 320], ["屏東", "員林", 110, 320], ["屏東", "斗六", 105, 295], ["屏東", "嘉義", 95, 275], ["屏東", "新營", 90, 255], ["屏東", "麻豆", 85, 220], ["屏東", "台南", 75, 185], ["屏東", "岡山", 65, 130], ["屏東", "高雄", 55, 95], ["屏東", "屏東", 50, 65], ["屏東", "花蓮", 150, 415], ["屏東", "台東", 175, 560],
+            ["花蓮", "基隆", 65, 195], ["花蓮", "台北", 105, 290], ["花蓮", "桃園", 120, 320], ["花蓮", "中壢", 120, 320], ["花蓮", "新竹", 135, 365], ["花蓮", "竹南", 140, 390], ["花蓮", "苗栗", 140, 390], ["花蓮", "大甲", 150, 415], ["花蓮", "台中", 150, 415], ["花蓮", "沙鹿", 150, 415], ["花蓮", "豐原", 150, 415], ["花蓮", "南投", 150, 415], ["花蓮", "埔里", 150, 415], ["花蓮", "彰化", 150, 415], ["花蓮", "員林", 150, 415], ["花蓮", "斗六", 150, 415], ["花蓮", "嘉義", 150, 415], ["花蓮", "新營", 150, 415], ["花蓮", "麻豆", 150, 415], ["花蓮", "台南", 150, 415], ["花蓮", "岡山", 150, 415], ["花蓮", "高雄", 150, 415], ["花蓮", "屏東", 150, 415], ["花蓮", "花蓮", 50, 65], ["花蓮", "台東", 120, 345],
+            ["台東", "基隆", 175, 560], ["台東", "台北", 175, 560], ["台東", "桃園", 175, 560], ["台東", "中壢", 175, 560], ["台東", "新竹", 175, 560], ["台東", "竹南", 175, 560], ["台東", "苗栗", 175, 560], ["台東", "大甲", 175, 560], ["台東", "台中", 175, 560], ["台東", "沙鹿", 175, 560], ["台東", "豐原", 175, 560], ["台東", "南投", 175, 560], ["台東", "埔里", 175, 560], ["台東", "彰化", 175, 560], ["台東", "員林", 175, 560], ["台東", "斗六", 175, 560], ["台東", "嘉義", 175, 560], ["台東", "新營", 175, 560], ["台東", "麻豆", 175, 560], ["台東", "台南", 175, 560], ["台東", "岡山", 175, 560], ["台東", "高雄", 175, 560], ["台東", "屏東", 175, 560], ["台東", "花蓮", 120, 345], ["台東", "台東", 50, 65]
+        ];
 
-        <div class="space-y-2 text-xs">
-          <div class="font-semibold text-slate-300 flex justify-between items-center mb-1">
-            <span>全單費用明細拆解 (總計 <span id="summaryPieces">1</span> 件)：</span>
-          </div>
+        window.onload = function() {
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('dateTime').value = now.toISOString().slice(0,16);
+            
+            document.getElementById('origin').value = "南崁";
+            document.getElementById('dest').value = "南崁";
+            
+            const savedUrl = localStorage.getItem('hct_script_url');
+            if(savedUrl) {
+                document.getElementById('scriptUrl').value = savedUrl;
+            }
+            calculate();
+        };
 
-          <div class="flex justify-between items-center p-2 rounded-lg bg-slate-900/50">
-            <span class="text-slate-300">接費 (派單收件)</span>
-            <span id="summaryJie" class="font-mono text-slate-300">$27.0</span>
-          </div>
-
-          <div class="flex justify-between items-center p-2 rounded-lg bg-slate-900/50">
-            <div>
-              <span class="font-medium text-slate-200">本款運費 (基本)</span>
-              <div id="benDetailDisplay" class="text-[10px] text-slate-400">單件起碼 $50 / 百公斤 $65 (全單合併計算)</div>
-            </div>
-            <span id="benFeeDisplay" class="font-bold text-slate-200">$50</span>
-          </div>
-
-          <div class="flex justify-between items-center p-2 rounded-lg bg-slate-900/50">
-            <span class="text-slate-300">送費 (派送)</span>
-            <span id="summarySong" class="font-mono text-slate-300">$27.0</span>
-          </div>
-
-          <div class="flex justify-between items-center p-2 rounded-lg bg-slate-900/50">
-            <span class="text-slate-300">特殊服務費 (樓層/地下室)</span>
-            <span id="summaryTe" class="font-mono text-slate-300">$0.0</span>
-          </div>
-
-          <div id="summaryTiaoRow" class="hidden flex justify-between items-center p-2 rounded-lg bg-amber-950/30 text-amber-300">
-            <span>基隆/八堵挑挽工資</span>
-            <span id="summaryTiao" class="font-mono">$0.0</span>
-          </div>
-
-          <div id="summaryLianRow" class="hidden flex justify-between items-center p-2 rounded-lg bg-rose-950/30 text-rose-300">
-            <span>偏遠聯運費</span>
-            <span id="summaryLian" class="font-mono">$0.0</span>
-          </div>
-        </div>
-
-        <div class="bg-slate-950/70 rounded-xl p-3 text-[11px] font-mono text-slate-400 space-y-1 border border-slate-800">
-          <div class="text-orange-400 font-sans font-semibold mb-1 flex items-center gap-1">
-            <i class="fa-solid fa-calculator"></i>
-            <span>計算公式說明</span>
-          </div>
-          <div id="formulaText" class="space-y-0.5 leading-relaxed"></div>
-        </div>
-
-        <!-- 5. 儲存並寫入 Google Sheet 按鈕 (老公需求 5 & 6) -->
-        <button id="btnSaveSheet" onclick="saveToGoogleSheet()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm active:scale-95">
-          <i class="fa-solid fa-file-excel text-base"></i>
-          <span>儲存帳務紀錄至 Google 試算表</span>
-        </button>
-
-      </section>
-
-    </main>
-
-    <footer class="text-center text-[11px] text-slate-500 py-2 border-t border-slate-800">
-      HCT 107/08/01 費率與 Google Sheet 帳務自動同步系統
-    </footer>
-  </div>
-
-  <script>
-    const subToMainMap = {
-      "羅東": "羅東", "宜蘭": "羅東", "基隆": "基隆", "八堵": "基隆",  
-      "台北": "台北", "濱江": "台北", "三重": "台北", "萬華": "台北", "北投": "台北", "八里": "台北", "淡水": "台北", "信義": "台北", "澎湖(空)": "台北", "蘆洲": "台北", "新店": "台北", "土城": "台北", "樹林": "台北", "五股": "台北", "中和": "台北", "永和": "台北", "汐止": "台北",
-      "桃園": "桃園", "南崁": "桃園", "大園": "桃園", "龜山": "桃園", "八德": "桃園", "北桃": "桃園", "三峽": "桃園",
-      "中壢": "中壢", "平鎮": "中壢", "楊梅": "中壢",
-      "新竹": "新竹", "新豐": "新竹", "竹北": "新竹", "竹科": "新竹", "竹東": "新竹", 
-      "竹南": "竹南", "頭份": "竹南", "苗栗": "苗栗", "大甲": "大甲", "沙鹿": "沙鹿", "豐原": "豐原",
-      "台中": "台中", "烏日": "台中", "大里": "台中", "五權": "台中", "中工": "台中", "西屯": "台中",
-      "南投": "南投", "草屯(南投)": "南投", "埔里": "埔里", "草屯(埔里)": "埔里", "彰化": "彰化", "鹿港": "彰化",
-      "員林": "員林", "田中": "員林", "埤頭": "員林", "斗六": "斗六", "虎尾": "斗六",
-      "嘉義": "嘉義", "北港": "嘉義", "民雄": "嘉義", "新營": "新營", "麻豆": "麻豆",
-      "台南": "台南", "永康": "台南", "安平": "台南", "安南": "台南", "岡山": "岡山",
-      "高雄": "高雄", "三民": "高雄", "大社": "高雄", "前鎮": "高雄", "鳳山": "高雄", "澎湖(海)": "高雄",
-      "屏東": "屏東", "潮州": "屏東", "屏工": "屏東", "花蓮": "花蓮", "玉里": "花蓮", "台東": "台東"
-    };
-
-    function getMasterStation(stationName) { return subToMainMap[stationName] || stationName; }
-    const ALL_STATIONS = Object.keys(subToMainMap);
-
-    const caiBaseRates = {
-      1: { jie: 27.0, song: 27.0, te: 30.0 }, 2: { jie: 27.0, song: 27.0, te: 30.0 },
-      3: { jie: 27.0, song: 27.0, te: 30.0 }, 4: { jie: 27.0, song: 27.0, te: 30.0 },
-      5: { jie: 27.0, song: 27.0, te: 30.0 }, 6: { jie: 27.0, song: 27.0, te: 36.0 },
-      7: { jie: 27.0, song: 27.0, te: 42.0 }, 8: { jie: 29.6, song: 29.6, te: 48.0 },
-      9: { jie: 33.3, song: 33.3, te: 54.0 }, 10: { jie: 37.0, song: 37.0, te: 60.0 }
-    };
-
-    const RAW_RATE_LIST = [
-      ["羅東","羅東",50,65],["羅東","基隆",55,150],["羅東","台北",75,185],["羅東","桃園",75,185],["羅東","中壢",85,220],["羅東","新竹",90,255],["羅東","竹南",95,275],["羅東","苗栗",95,275],["羅東","大甲",105,320],["羅東","沙鹿",105,320],["羅東","豐原",105,320],["羅東","台中",105,320],["羅東","南投",120,345],["羅東","埔里",130,365],["羅東","彰化",120,345],["羅東","員林",120,345],["羅東","斗六",135,390],["羅東","嘉義",135,390],["羅東","新營",140,455],["羅東","麻豆",145,455],["羅東","台南",155,460],["羅東","岡山",160,485],["羅東","高雄",160,485],["羅東","屏東",165,510],["羅東","花蓮",65,195],["羅東","台東",155,490],
-      ["基隆","羅東",55,150],["基隆","基隆",50,65],["基隆","台北",50,65],["基隆","桃園",55,95],["基隆","中壢",55,130],["基隆","新竹",55,150],["基隆","竹南",55,150],["基隆","苗栗",75,185],["基隆","大甲",85,220],["基隆","沙鹿",90,255],["基隆","豐原",90,255],["基隆","台中",90,255],["基隆","南投",95,275],["基隆","埔里",100,290],["基隆","彰化",95,275],["基隆","員林",95,275],["基隆","斗六",100,290],["基隆","嘉義",105,320],["基隆","新營",120,345],["基隆","麻豆",130,365],["基隆","台南",135,390],["基隆","岡山",135,390],["基隆","高雄",140,415],["基隆","屏東",145,455],["基隆","花蓮",105,290],["基隆","台東",175,560],
-      ["台北","羅東",75,185],["台北","基隆",50,65],["台北","台北",50,65],["台北","桃園",50,65],["台北","中壢",55,95],["台北","新竹",55,130],["台北","竹南",55,150],["台北","苗栗",55,150],["台北","大甲",85,220],["台北","沙鹿",85,220],["台北","豐原",85,220],["台北","台中",85,220],["台北","南投",90,255],["台北","埔里",95,275],["台北","彰化",90,255],["台北","員林",90,255],["台北","斗六",95,275],["台北","嘉義",100,290],["台北","新營",105,320],["台北","麻豆",120,345],["台北","台南",130,365],["台北","岡山",135,390],["台北","高雄",135,390],["台北","屏東",140,415],["台北","花蓮",105,320],["台北","台東",175,560],
-      ["桃園","羅東",75,185],["桃園","基隆",55,95],["桃園","台北",50,65],["桃園","桃園",50,65],["桃園","中壢",50,65],["桃園","新竹",55,95],["桃園","竹南",55,130],["桃園","苗栗",55,130],["桃園","大甲",75,220],["桃園","沙鹿",75,220],["桃園","豐原",75,220],["桃園","台中",75,220],["桃園","南投",85,255],["桃園","埔里",90,275],["桃園","彰化",85,255],["桃園","員林",85,255],["桃園","斗六",95,275],["桃園","嘉義",95,290],["桃園","新營",100,320],["桃園","麻豆",105,345],["桃園","台南",120,365],["桃園","岡山",130,390],["桃園","高雄",130,365],["桃園","屏東",135,415],["桃園","花蓮",120,320],["桃園","台東",175,560],
-      ["中壢","羅東",85,220],["中壢","基隆",55,130],["中壢","台北",55,95],["中壢","桃園",50,65],["中壢","中壢",50,65],["中壢","新竹",50,65],["中壢","竹南",55,95],["中壢","苗栗",55,95],["中壢","大甲",65,185],["中壢","沙鹿",75,185],["中壢","豐原",75,185],["中壢","台中",75,185],["中壢","南投",85,220],["中壢","埔里",85,255],["中壢","彰化",85,220],["中壢","員林",85,220],["中壢","斗六",90,255],["中壢","嘉義",90,275],["中壢","新營",95,290],["中壢","麻豆",100,320],["中壢","台南",105,345],["中壢","岡山",120,345],["中壢","高雄",120,365],["中壢","屏東",130,390],["中壢","花蓮",135,365],["中壢","台東",175,560],
-      ["新竹","羅東",90,255],["新竹","基隆",55,150],["新竹","台北",55,130],["新竹","桃園",55,95],["新竹","中壢",50,65],["新竹","新竹",50,50],["新竹","竹南",50,65],["新竹","苗栗",55,95],["新竹","大甲",55,130],["新竹","沙鹿",65,150],["新竹","豐原",65,150],["新竹","台中",65,150],["新竹","南投",75,185],["新竹","埔里",75,220],["新竹","彰化",75,185],["新竹","員林",75,185],["新竹","斗六",85,220],["新竹","嘉義",85,255],["新竹","新營",90,275],["新竹","麻豆",95,290],["新竹","台南",100,320],["新竹","岡山",105,320],["新竹","高雄",120,345],["新竹","屏東",120,365],["新竹","花蓮",130,395],["新竹","台東",160,510],
-      ["竹南","羅東",95,275],["竹南","基隆",55,150],["竹南","台北",55,150],["竹南","桃園",55,130],["竹南","中壢",55,95],["竹南","新竹",50,65],["竹南","竹南",50,50],["竹南","苗栗",50,65],["竹南","大甲",55,95],["竹南","沙鹿",55,130],["竹南","豐原",55,130],["竹南","台中",55,130],["竹南","南投",75,150],["竹南","埔里",75,220],["竹南","彰化",75,150],["竹南","員林",75,150],["竹南","斗六",75,185],["竹南","嘉義",75,255],["竹南","新營",90,275],["竹南","麻豆",90,275],["竹南","台南",95,290],["竹南","岡山",100,320],["竹南","高雄",105,345],["竹南","屏東",105,365],["竹南","花蓮",135,395],["竹南","台東",160,480],
-      ["苗栗","羅東",95,275],["苗栗","基隆",75,185],["苗栗","台北",55,150],["苗栗","桃園",55,130],["苗栗","中壢",55,95],["苗栗","新竹",55,95],["苗栗","竹南",50,65],["苗栗","苗栗",50,50],["苗栗","大甲",50,95],["苗栗","沙鹿",55,130],["苗栗","豐原",55,130],["苗栗","台中",55,130],["苗栗","南投",55,130],["苗栗","埔里",75,185],["苗栗","彰化",55,130],["苗栗","員林",55,130],["苗栗","斗六",75,185],["苗栗","嘉義",75,220],["苗栗","新營",90,255],["苗栗","麻豆",90,255],["苗栗","台南",95,275],["苗栗","岡山",95,275],["苗栗","高雄",95,290],["苗栗","屏東",100,320],["苗栗","花蓮",135,395],["苗栗","台東",155,480],
-      ["大甲","羅東",105,320],["大甲","基隆",85,220],["大甲","台北",85,220],["大甲","桃園",75,220],["大甲","中壢",65,185],["大甲","新竹",55,130],["大甲","竹南",55,95],["大甲","苗栗",50,95],["大甲","大甲",50,50],["大甲","沙鹿",50,65],["大甲","豐原",50,65],["大甲","台中",50,65],["大甲","南投",55,95],["大甲","埔里",55,130],["大甲","彰化",55,95],["大甲","員林",55,95],["大甲","斗六",55,130],["大甲","嘉義",75,150],["大甲","新營",85,185],["大甲","麻豆",85,220],["大甲","台南",90,255],["大甲","岡山",90,275],["大甲","高雄",95,275],["大甲","屏東",100,290],["大甲","花蓮",105,320],["大甲","台東",150,460],
-      ["沙鹿","羅東",105,320],["沙鹿","基隆",90,255],["沙鹿","台北",85,220],["沙鹿","桃園",75,220],["沙鹿","中壢",75,185],["沙鹿","新竹",65,150],["沙鹿","竹南",55,130],["沙鹿","苗栗",55,130],["沙鹿","大甲",50,65],["沙鹿","沙鹿",50,50],["沙鹿","豐原",50,50],["沙鹿","台中",50,55],["沙鹿","南投",55,95],["沙鹿","埔里",55,130],["沙鹿","彰化",55,95],["沙鹿","員林",55,95],["沙鹿","斗六",55,130],["沙鹿","嘉義",55,150],["沙鹿","新營",85,185],["沙鹿","麻豆",85,220],["沙鹿","台南",90,255],["沙鹿","岡山",90,275],["沙鹿","高雄",95,275],["沙鹿","屏東",95,275],["沙鹿","花蓮",105,320],["沙鹿","台東",145,440],
-      ["豐原","羅東",105,320],["豐原","基隆",90,255],["豐原","台北",85,220],["豐原","桃園",75,220],["豐原","中壢",75,185],["豐原","新竹",65,150],["豐原","竹南",55,130],["豐原","苗栗",55,130],["豐原","大甲",50,65],["豐原","沙鹿",50,50],["豐原","豐原",50,50],["豐原","台中",50,55],["豐原","南投",55,95],["豐原","埔里",55,130],["豐原","彰化",50,95],["豐原","員林",55,95],["豐原","斗六",55,130],["豐原","嘉義",55,150],["豐原","新營",85,185],["豐原","麻豆",85,220],["豐原","台南",90,255],["豐原","岡山",90,275],["豐原","高雄",95,275],["豐原","屏東",95,275],["豐原","花蓮",105,320],["豐原","台東",150,440],
-      ["台中","羅東",105,320],["台中","基隆",90,255],["台中","台北",85,220],["台中","桃園",75,220],["台中","中壢",75,185],["台中","新竹",65,150],["台中","竹南",55,130],["台中","苗栗",55,130],["台中","大甲",50,65],["台中","沙鹿",50,55],["台中","豐原",50,55],["台中","台中",50,55],["台中","南投",50,95],["台中","埔里",55,130],["台中","彰化",50,95],["台中","員林",55,95],["台中","斗六",55,130],["台中","嘉義",55,150],["台中","新營",85,185],["台中","麻豆",85,220],["台中","台南",90,255],["台中","岡山",95,275],["台中","高雄",95,275],["台中","屏東",95,275],["台中","花蓮",105,320],["台中","台東",145,440],
-      ["南投","羅東",120,345],["南投","基隆",95,275],["南投","台北",90,255],["南投","桃園",85,255],["南投","中壢",85,220],["南投","新竹",75,185],["南投","竹南",75,150],["南投","苗栗",55,130],["南投","大甲",55,95],["南投","沙鹿",55,95],["南投","豐原",55,95],["南投","台中",50,95],["南投","南投",50,55],["南投","埔里",55,95],["南投","彰化",55,55],["南投","員林",55,55],["南投","斗六",55,95],["南投","嘉義",55,130],["南投","新營",75,150],["南投","麻豆",75,185],["南投","台南",75,220],["南投","岡山",85,255],["南投","高雄",90,255],["南投","屏東",90,275],["南投","花蓮",130,365],["南投","台東",140,405],
-      ["埔里","羅東",130,365],["埔里","基隆",100,290],["埔里","台北",95,275],["埔里","桃園",90,275],["埔里","中壢",85,255],["埔里","新竹",75,220],["埔里","竹南",75,220],["埔里","苗栗",75,185],["埔里","大甲",55,130],["埔里","沙鹿",55,130],["埔里","豐原",55,130],["埔里","台中",55,130],["埔里","南投",55,95],["埔里","埔里",50,55],["埔里","彰化",55,55],["埔里","員林",55,55],["埔里","斗六",55,95],["埔里","嘉義",55,130],["埔里","新營",75,150],["埔里","麻豆",75,185],["埔里","台南",75,220],["埔里","岡山",85,255],["埔里","高雄",90,255],["埔里","屏東",100,275],["埔里","花蓮",140,405],["埔里","台東",150,460],
-      ["彰化","羅東",120,345],["彰化","基隆",95,275],["彰化","台北",90,255],["彰化","桃園",85,255],["彰化","中壢",85,220],["彰化","新竹",75,185],["彰化","竹南",75,150],["彰化","苗栗",55,130],["彰化","大甲",55,95],["彰化","沙鹿",55,95],["彰化","豐原",50,95],["彰化","台中",50,95],["彰化","南投",55,55],["彰化","埔里",55,55],["彰化","彰化",50,50],["彰化","員林",55,55],["彰化","斗六",55,95],["彰化","嘉義",55,130],["彰化","新營",75,150],["彰化","麻豆",75,185],["彰化","台南",75,220],["彰化","岡山",85,255],["彰化","高雄",90,255],["彰化","屏東",275,275],["彰化","花蓮",130,365],["彰化","台東",145,405],
-      ["員林","羅東",120,345],["員林","基隆",95,275],["員林","台北",90,255],["員林","桃園",85,255],["員林","中壢",85,220],["員林","新竹",75,185],["員林","竹南",75,150],["員林","苗栗",55,130],["員林","大甲",55,95],["員林","沙鹿",55,95],["員林","豐原",55,95],["員林","台中",55,95],["員林","南投",55,55],["員林","埔里",55,55],["員林","彰化",55,55],["員林","員林",50,50],["員林","斗六",55,55],["員林","嘉義",55,130],["員林","新營",75,150],["員林","麻豆",75,185],["員林","台南",75,220],["員林","岡山",85,255],["員林","高雄",90,255],["員林","屏東",90,275],["員林","花蓮",130,365],["員林","台東",140,405],
-      ["斗六","羅東",135,390],["斗六","基隆",100,290],["斗六","台北",95,275],["斗六","桃園",95,275],["斗六","中壢",90,255],["斗六","新竹",85,220],["斗六","竹南",75,185],["斗六","苗栗",75,185],["斗六","大甲",55,130],["斗六","沙鹿",55,130],["斗六","豐原",55,130],["斗六","台中",55,130],["斗六","南投",55,95],["斗六","埔里",55,95],["斗六","彰化",55,95],["斗六","員林",55,55],["斗六","斗六",50,50],["斗六","嘉義",55,55],["斗六","新營",55,95],["斗六","麻豆",55,130],["斗六","台南",55,150],["斗六","岡山",75,185],["斗六","高雄",85,220],["斗六","屏東",85,220],["斗六","花蓮",135,395],["斗六","台東",135,385],
-      ["嘉義","羅東",135,390],["嘉義","基隆",105,320],["嘉義","台北",100,290],["嘉義","桃園",95,290],["嘉義","中壢",90,275],["嘉義","新竹",85,255],["嘉義","竹南",75,255],["嘉義","苗栗",75,220],["嘉義","大甲",75,150],["嘉義","沙鹿",55,150],["嘉義","豐原",55,150],["嘉義","台中",55,150],["嘉義","南投",55,130],["嘉義","埔里",55,130],["嘉義","彰化",55,130],["嘉義","員林",55,130],["嘉義","斗六",55,55],["嘉義","嘉義",50,50],["嘉義","新營",50,50],["嘉義","麻豆",55,95],["嘉義","台南",55,130],["嘉義","岡山",55,150],["嘉義","高雄",85,185],["嘉義","屏東",85,220],["嘉義","花蓮",155,475],["嘉義","台東",130,320],
-      ["新營","羅東",140,455],["新營","基隆",120,345],["新營","台北",105,320],["新營","桃園",100,320],["新營","中壢",95,290],["新營","新竹",90,275],["新營","竹南",90,275],["新營","苗栗",90,255],["新營","大甲",85,185],["新營","沙鹿",85,185],["新營","豐原",85,185],["新營","台中",85,185],["新營","南投",75,150],["新營","埔里",75,150],["新營","彰化",75,150],["新營","員林",75,150],["新營","斗六",55,95],["新營","嘉義",50,50],["新營","新營",50,50],["新營","麻豆",50,55],["新營","台南",55,95],["新營","岡山",55,130],["新營","高雄",55,150],["新營","屏東",55,185],["新營","花蓮",155,475],["新營","台東",120,345],
-      ["麻豆","羅東",145,455],["麻豆","基隆",130,365],["麻豆","台北",120,345],["麻豆","桃園",105,345],["麻豆","中壢",100,320],["麻豆","新竹",95,290],["麻豆","竹南",90,275],["麻豆","苗栗",90,255],["麻豆","大甲",85,220],["麻豆","沙鹿",85,220],["麻豆","豐原",85,220],["麻豆","台中",85,220],["麻豆","南投",75,185],["麻豆","埔里",75,185],["麻豆","彰化",75,185],["麻豆","員林",75,185],["麻豆","斗六",55,130],["麻豆","嘉義",55,95],["麻豆","新營",50,55],["麻豆","麻豆",50,50],["麻豆","台南",50,65],["麻豆","岡山",55,95],["麻豆","高雄",55,130],["麻豆","屏東",55,150],["麻豆","花蓮",150,460],["麻豆","台東",105,280],
-      ["台南","羅東",155,460],["台南","基隆",135,390],["台南","台北",130,365],["台南","桃園",120,365],["台南","中壢",105,345],["台南","新竹",100,320],["台南","竹南",95,290],["台南","苗栗",95,275],["台南","大甲",90,255],["台南","沙鹿",90,255],["台南","豐原",90,255],["台南","台中",90,255],["台南","南投",75,220],["台南","埔里",75,220],["台南","彰化",75,220],["台南","員林",75,220],["台南","斗六",55,150],["台南","嘉義",55,130],["台南","新營",55,95],["台南","麻豆",50,65],["台南","台南",50,50],["台南","岡山",50,55],["台南","高雄",55,95],["台南","屏東",55,130],["台南","花蓮",145,440],["台南","台東",100,265],
-      ["岡山","羅東",160,485],["岡山","基隆",135,390],["岡山","台北",135,390],["岡山","桃園",130,390],["岡山","中壢",120,345],["岡山","新竹",105,320],["岡山","竹南",100,320],["岡山","苗栗",95,275],["岡山","大甲",90,275],["岡山","沙鹿",90,275],["岡山","豐原",90,275],["岡山","台中",90,275],["岡山","南投",85,255],["岡山","埔里",85,255],["岡山","彰化",85,255],["岡山","員林",85,255],["岡山","斗六",75,185],["岡山","嘉義",55,150],["岡山","新營",55,130],["岡山","麻豆",55,95],["岡山","台南",50,55],["岡山","岡山",50,50],["岡山","高雄",50,65],["岡山","屏東",50,95],["岡山","花蓮",140,405],["岡山","台東",100,260],
-      ["高雄","羅東",160,485],["高雄","基隆",140,415],["高雄","台北",135,390],["高雄","桃園",130,365],["高雄","中壢",120,365],["高雄","新竹",120,345],["高雄","竹南",105,345],["高雄","苗栗",95,290],["高雄","大甲",95,275],["高雄","沙鹿",95,275],["高雄","豐原",95,275],["高雄","台中",95,275],["高雄","南投",90,255],["高雄","埔里",90,255],["高雄","彰化",90,255],["高雄","員林",90,255],["高雄","斗六",85,220],["高雄","嘉義",85,185],["高雄","新營",55,150],["高雄","麻豆",55,130],["高雄","台南",55,95],["高雄","岡山",50,65],["高雄","高雄",50,50],["高雄","屏東",50,65],["高雄","花蓮",140,405],["高雄","台東",95,255],
-      ["屏東","羅東",165,510],["屏東","基隆",145,455],["屏東","台北",140,415],["屏東","桃園",135,415],["屏東","中壢",130,390],["屏東","新竹",120,365],["屏東","竹南",105,365],["屏東","苗栗",100,320],["屏東","大甲",100,290],["屏東","沙鹿",95,275],["屏東","豐原",95,275],["屏東","台中",95,275],["屏東","南投",90,275],["屏東","埔里",100,275],["屏東","彰化",90,275],["屏東","員林",90,275],["屏東","斗六",85,220],["屏東","嘉義",85,220],["屏東","新營",55,185],["屏東","麻豆",55,150],["屏東","台南",55,130],["屏東","岡山",50,95],["屏東","高雄",50,65],["屏東","屏東",50,50],["屏東","花蓮",140,380],["屏東","台東",95,260],
-      ["花蓮","羅東",65,195],["花蓮","基隆",105,290],["花蓮","台北",105,320],["花蓮","桃園",120,320],["花蓮","中壢",135,365],["花蓮","新竹",130,395],["花蓮","竹南",135,395],["花蓮","苗栗",135,395],["花蓮","大甲",105,320],["花蓮","沙鹿",105,320],["花蓮","豐原",105,320],["花蓮","台中",105,320],["花蓮","南投",130,365],["花蓮","埔里",140,405],["花蓮","彰化",130,365],["花蓮","員林",130,365],["花蓮","斗六",135,395],["花蓮","嘉義",155,475],["花蓮","新營",155,475],["花蓮","麻豆",150,460],["花蓮","台南",145,440],["花蓮","岡山",140,405],["花蓮","高雄",140,405],["花蓮","屏東",140,380],["花蓮","花蓮",50,90],["花蓮","台東",90,255],
-      ["台東","羅東",155,490],["台東","基隆",175,560],["台東","台北",175,560],["台東","桃園",175,560],["台東","中壢",175,560],["台東","新竹",160,510],["台東","竹南",160,480],["台東","苗栗",155,480],["台東","大甲",150,460],["台東","沙鹿",145,440],["台東","豐原",150,440],["台東","台中",145,440],["台東","南投",140,405],["台東","埔里",150,460],["台東","彰化",145,405],["台東","員林",140,405],["台東","斗六",135,385],["台東","嘉義",130,320],["台東","新營",120,345],["台東","麻豆",105,280],["台東","台南",100,265],["台東","岡山",100,260],["台東","高雄",95,255],["台東","屏東",95,260],["台東","花蓮",90,255],["台東","台東",50,260]
-    ];
-
-    const MATRIX_DATA = {};
-    RAW_RATE_LIST.forEach(item => {
-      const [orig, dest, base, rate] = item;
-      if (!MATRIX_DATA[orig]) MATRIX_DATA[orig] = {};
-      MATRIX_DATA[orig][dest] = { base, rate };
-    });
-
-    let currentCalcData = {};
-
-    window.onload = function() {
-      setCurrentDateTime();
-      initOptions();
-      loadSavedScriptUrl();
-      calculate();
-    };
-
-    function setCurrentDateTime() {
-      const now = new Date();
-      now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-      document.getElementById('inputDateTime').value = now.toISOString().slice(0, 16);
-    }
-
-    function initOptions() {
-      const originSel = document.getElementById('originSelect');
-      const destSel = document.getElementById('destSelect');
-      originSel.innerHTML = '';
-      destSel.innerHTML = '';
-      ALL_STATIONS.forEach(loc => {
-        const opt1 = document.createElement('option'); opt1.value = loc; opt1.innerText = loc; originSel.appendChild(opt1);
-        const opt2 = document.createElement('option'); opt2.value = loc; opt2.innerText = loc; destSel.appendChild(opt2);
-      });
-      // 預設: 南崁 -> 南崁
-      originSel.value = "南崁";
-      destSel.value = "南崁";
-    }
-
-    function switchMode(mode) {
-      if (mode === 'weight') {
-        document.getElementById('modeWeightArea').classList.remove('hidden');
-        document.getElementById('modeDimArea').classList.add('hidden');
-        document.getElementById('modeBtn1').className = "px-2.5 py-1 text-xs rounded-lg font-medium transition bg-orange-500 text-white shadow";
-        document.getElementById('modeBtn2').className = "px-2.5 py-1 text-xs rounded-lg font-medium transition text-slate-400 hover:text-slate-200";
-      } else {
-        document.getElementById('modeWeightArea').classList.add('hidden');
-        document.getElementById('modeDimArea').classList.remove('hidden');
-        document.getElementById('modeBtn2').className = "px-2.5 py-1 text-xs rounded-lg font-medium transition bg-orange-500 text-white shadow";
-        document.getElementById('modeBtn1').className = "px-2.5 py-1 text-xs rounded-lg font-medium transition text-slate-400 hover:text-slate-200";
-        calcDim();
-      }
-    }
-
-    function onWeightInput() {
-      const w = parseFloat(document.getElementById('inputWeight').value) || 0;
-      document.getElementById('inputCai').value = Math.ceil(w / 10);
-      calculate();
-    }
-
-    function onCaiInput() {
-      const c = parseFloat(document.getElementById('inputCai').value) || 0;
-      document.getElementById('inputWeight').value = c * 10;
-      calculate();
-    }
-
-    function calcDim() {
-      const l = parseFloat(document.getElementById('dimL').value) || 0;
-      const w = parseFloat(document.getElementById('dimW').value) || 0;
-      const h = parseFloat(document.getElementById('dimH').value) || 0;
-      const exactCai = (l * w * h) / 27000;
-      const ceilCai = Math.ceil(exactCai);
-      document.getElementById('dimExactDisplay').innerText = `${exactCai.toFixed(1)} 才`;
-      document.getElementById('dimCeilDisplay').innerText = `${ceilCai} 才 (${(ceilCai * 10).toFixed(1)} kg)`;
-      document.getElementById('inputCai').value = ceilCai;
-      document.getElementById('inputWeight').value = ceilCai * 10;
-      calculate();
-    }
-
-    function changePiece(delta) {
-      const el = document.getElementById('pieceCount');
-      let val = (parseInt(el.value) || 1) + delta;
-      if (val < 1) val = 1;
-      el.value = val;
-      calculate();
-    }
-
-    function toggleLianInput() {
-      const checked = document.getElementById('chkLian').checked;
-      document.getElementById('lianInputWrap').classList.toggle('hidden', !checked);
-      if (checked) {
-        document.getElementById('chkSong').checked = false;
-        document.getElementById('chkTe').checked = false;
-      } else {
-        document.getElementById('chkSong').checked = true;
-        document.getElementById('chkTe').checked = false;
-      }
-      calculate();
-    }
-
-    function calculate() {
-      const originRaw = document.getElementById('originSelect').value;
-      const destRaw = document.getElementById('destSelect').value;
-      const origin = getMasterStation(originRaw);
-      const dest = getMasterStation(destRaw);
-      
-      const singleWeight = parseFloat(document.getElementById('inputWeight').value) || 0;
-      const singleCai = parseFloat(document.getElementById('inputCai').value) || 0;
-      const pieces = parseInt(document.getElementById('pieceCount').value) || 1;
-
-      const isBaseKeelung = (origin === "基隆" || dest === "基隆");
-      const tiaoContainer = document.getElementById('tiaoContainer');
-      const chkTiao = document.getElementById('chkTiao');
-      
-      if (isBaseKeelung) {
-        if (tiaoContainer.classList.contains('hidden')) {
-          tiaoContainer.classList.remove('hidden');
-          chkTiao.checked = true;
+        function adjustPieces(val) {
+            let p = document.getElementById('pieces');
+            let current = parseInt(p.value) || 1;
+            current += val;
+            if (current < 1) current = 1;
+            p.value = current;
+            calculate();
         }
-      } else {
-        tiaoContainer.classList.add('hidden');
-        chkTiao.checked = false;
-      }
 
-      const singleCaiCeil = Math.ceil(singleCai);
-      const totalCai = singleCaiCeil * pieces;
-      const singleKg = Math.max(singleWeight, singleCaiCeil * 10);
-      const totalKg = singleKg * pieces;
-      const W = totalKg / 100;
+        function calculate() {
+            let origin = document.getElementById('origin').value;
+            let dest = document.getElementById('dest').value;
+            let weight = parseFloat(document.getElementById('weight').value) || 0;
+            let cai = parseFloat(document.getElementById('cai').value) || 0;
+            let pieces = parseInt(document.getElementById('pieces').value) || 1;
 
-      const lookupCai = Math.min(Math.max(totalCai, 1), 10);
-      const baseFee = caiBaseRates[lookupCai] || { jie: 27.0, song: 27.0, te: 30.0 };
+            let isJie = document.getElementById('jie').checked;
+            let isSong = document.getElementById('song').checked;
+            let isTe = document.getElementById('te').checked;
+            let isTiao = document.getElementById('tiao').checked;
+            let isLian = document.getElementById('lian').checked;
 
-      let benBase = 50, benRate = 65;
-      if (MATRIX_DATA[origin] && MATRIX_DATA[origin][dest]) {
-        benBase = MATRIX_DATA[origin][dest].base;
-        benRate = MATRIX_DATA[origin][dest].rate;
-      }
-      const benTotal = Math.max(benBase, benRate * W);
+            let baseRate = 50;
+            let kgRate = 65;
 
-      let jieTotal = 0;
-      if (document.getElementById('chkJie').checked) jieTotal = Math.max(baseFee.jie, 37 * W);
+            for (let i = 0; i < RAW_RATE_LIST.length; i++) {
+                if (RAW_RATE_LIST[i][0] === origin && RAW_RATE_LIST[i][1] === dest) {
+                    baseRate = RAW_RATE_LIST[i][2];
+                    kgRate = RAW_RATE_LIST[i][3];
+                    break;
+                }
+            }
 
-      let songTotal = 0;
-      if (document.getElementById('chkSong').checked) songTotal = Math.max(baseFee.song, 37 * W);
+            let singleWeightCalc = Math.max(weight, cai * 10);
+            let totalWeight = singleWeightCalc * pieces;
 
-      let teTotal = 0;
-      if (document.getElementById('chkTe').checked) teTotal = Math.max(baseFee.te, 60 * W);
+            let itemBase = 0;
+            if (totalWeight <= 10) {
+                itemBase = baseRate;
+            } else {
+                let extraKg = totalWeight - 10;
+                let blocks = Math.ceil(extraKg / 10);
+                itemBase = baseRate + (blocks * kgRate);
+            }
 
-      let tiaoTotal = 0;
-      if (isBaseKeelung && chkTiao.checked) tiaoTotal = Math.max(6.0, 10 * W);
+            let jieFee = isJie ? 37 * pieces : 0;
+            let songFee = isSong ? 37 * pieces : 0;
+            let teFee = isTe ? 60 * pieces : 0;
+            let tiaoFee = isTiao ? 50 * pieces : 0;
+            let lianFee = isLian ? 100 * pieces : 0;
 
-      let lianTotal = 0;
-      const isLianChecked = document.getElementById('chkLian').checked;
-      if (isLianChecked) {
-        const lianSingle = parseFloat(document.getElementById('inputLian').value) || 0;
-        lianTotal = lianSingle * pieces;
-      }
+            let totalSystemFee = itemBase + jieFee + songFee + teFee + tiaoFee + lianFee;
 
-      const grandTotal = Math.round(benTotal + jieTotal + songTotal + teTotal + tiaoTotal + lianTotal);
-      const singleAvg = Math.round(grandTotal / pieces);
+            document.getElementById('resJie').innerText = '$' + jieFee;
+            document.getElementById('resBase').innerText = '$' + itemBase;
+            document.getElementById('resSong').innerText = '$' + songFee;
+            document.getElementById('resTe').innerText = '$' + teFee;
+            document.getElementById('resTotal').innerText = '$' + totalSystemFee;
 
-      document.getElementById('calcWeightTag').innerText = `${W.toFixed(1)} 百公斤 (W)`;
-      document.getElementById('totalPriceDisplay').innerText = `$ ${grandTotal.toLocaleString()}`;
-      document.getElementById('perPieceDisplay').innerText = `單件平均: $${singleAvg}`;
-      document.getElementById('summaryPieces').innerText = pieces;
+            document.getElementById('formulaDesc').innerText = `${origin} ➔ ${dest} | 起碼$${baseRate}, 每百kg$${kgRate} (總重: ${totalWeight}kg)`;
 
-      document.getElementById('benFeeDisplay').innerText = `$${Math.round(benTotal)}`;
-      document.getElementById('benDetailDisplay').innerText = `單件起碼 $${benBase} / 百公斤 $${benRate} (全單合併計算)`;
+            let actualFeeVal = parseFloat(document.getElementById('actualFee').value);
+            let diffDisplay = document.getElementById('diffFeeDisplay');
+            
+            if(!isNaN(actualFeeVal)) {
+                let diff = actualFeeVal - totalSystemFee;
+                if(diff > 0) {
+                    diffDisplay.innerHTML = `<span class="profit-pos">+$${diff} (多收)</span>`;
+                } else if(diff < 0) {
+                    diffDisplay.innerHTML = `<span class="profit-neg">($${Math.abs(diff)}) (少收)</span>`;
+                } else {
+                    diffDisplay.innerHTML = `$0 (相符)`;
+                }
+            } else {
+                diffDisplay.innerHTML = `$0`;
+            }
+        }
 
-      document.getElementById('jieFeeDisplay').innerText = `$${jieTotal.toFixed(1)}`;
-      document.getElementById('summaryJie').innerText = `$${jieTotal.toFixed(1)}`;
+        function saveToGoogleSheet() {
+            let url = document.getElementById('scriptUrl').value.trim();
+            if(!url) {
+                alert('請先在上方「設定 Google Sheet 串接網址」填入 Apps Script 網址！');
+                return;
+            }
+            
+            localStorage.setItem('hct_script_url', url);
 
-      document.getElementById('songFeeDisplay').innerText = `$${songTotal.toFixed(1)}`;
-      document.getElementById('summarySong').innerText = `$${songTotal.toFixed(1)}`;
+            let dt = document.getElementById('dateTime').value;
+            let customer = document.getElementById('customerName').value || '散客';
+            let origin = document.getElementById('origin').value;
+            let dest = document.getElementById('dest').value;
+            let weight = document.getElementById('weight').value;
+            let cai = document.getElementById('cai').value;
+            let pieces = document.getElementById('pieces').value;
+            let systemFee = document.getElementById('resTotal').innerText.replace('$', '');
+            let actualFee = document.getElementById('actualFee').value || systemFee;
+            
+            let actualNum = parseFloat(actualFee) || 0;
+            let sysNum = parseFloat(systemFee) || 0;
+            let diff = actualNum - sysNum;
+            let diffStr = diff >= 0 ? `+${diff}` : `(${Math.abs(diff)})`;
 
-      document.getElementById('teFeeDisplay').innerText = `$${teTotal.toFixed(1)}`;
-      document.getElementById('summaryTe').innerText = `$${teTotal.toFixed(1)}`;
+            let jie = document.getElementById('jie').checked ? document.getElementById('resJie').innerText.replace('$', '') : '0';
+            let song = document.getElementById('song').checked ? document.getElementById('resSong').innerText.replace('$', '') : '0';
+            let te = document.getElementById('te').checked ? document.getElementById('resTe').innerText.replace('$', '') : '0';
+            let tiao = document.getElementById('tiao').checked ? '50' : '0';
+            let lian = document.getElementById('lian').checked ? '100' : '0';
 
-      document.getElementById('summaryTiaoRow').classList.toggle('hidden', !isBaseKeelung || !chkTiao.checked);
-      document.getElementById('tiaoFeeDisplay').innerText = `$${tiaoTotal.toFixed(1)}`;
-      document.getElementById('summaryTiao').innerText = `$${tiaoTotal.toFixed(1)}`;
+            let params = new URLSearchParams({
+                dateTime: dt,
+                customer: customer,
+                origin: origin,
+                dest: dest,
+                weight: weight,
+                cai: cai,
+                pieces: pieces,
+                systemFee: systemFee,
+                actualFee: actualFee,
+                diffFee: diffStr,
+                jieFee: jie,
+                songFee: song,
+                teFee: te,
+                tiaoFee: tiao,
+                lianFee: lian
+            });
 
-      document.getElementById('summaryLianRow').classList.toggle('hidden', !isLianChecked);
-      document.getElementById('summaryLian').innerText = `$${lianTotal.toFixed(1)}`;
+            let fullUrl = url + '?' + params.toString();
 
-      let formulaHtml = `<div>貨物總計：${pieces} 件 × ${singleCaiCeil}才 = <b>${totalCai} 才</b> (總計費重 W = ${W.toFixed(1)} 百公斤)</div>`;
-      if (document.getElementById('chkJie').checked) formulaHtml += `<div>接費 = Math.max(起碼 $${baseFee.jie}, $37 × ${W.toFixed(1)}) = $${jieTotal.toFixed(1)}</div>`;
-      formulaHtml += `<div>本款 = Math.max(起碼 $${benBase}, $${benRate} × ${W.toFixed(1)}) = $${benTotal.toFixed(1)}</div>`;
-      if (document.getElementById('chkSong').checked) formulaHtml += `<div>送費 = Math.max(起碼 $${baseFee.song}, $37 × ${W.toFixed(1)}) = $${songTotal.toFixed(1)}</div>`;
-      if (document.getElementById('chkTe').checked) formulaHtml += `<div>特服 = Math.max(起碼 $30, $60 × ${W.toFixed(1)}) = $${teTotal.toFixed(1)}</div>`;
-      if (isBaseKeelung && chkTiao.checked) formulaHtml += `<div>挑挽 = Math.max(起碼 $6, $10 × ${W.toFixed(1)}) = $${tiaoTotal.toFixed(1)}</div>`;
-      if (isLianChecked) formulaHtml += `<div>聯運 = $${lianTotal} (免收送費與特服費)</div>`;
-
-      let sumParts = [];
-      if (document.getElementById('chkJie').checked) sumParts.push(`接費 ($${jieTotal.toFixed(1)})`);
-      sumParts.push(`本款 ($${benTotal.toFixed(1)})`);
-      if (document.getElementById('chkSong').checked) sumParts.push(`送費 ($${songTotal.toFixed(1)})`);
-      if (document.getElementById('chkTe').checked) sumParts.push(`特服 ($${teTotal.toFixed(1)})`);
-      if (isBaseKeelung && chkTiao.checked) sumParts.push(`挑挽 ($${tiaoTotal.toFixed(1)})`);
-      if (isLianChecked) sumParts.push(`聯運 ($${lianTotal.toFixed(1)})`);
-
-      formulaHtml += `<div class="pt-1 text-amber-300 font-bold border-t border-slate-700/60 mt-1">系統估算 = ${sumParts.join(' + ')} = $${grandTotal} 元</div>`;
-      document.getElementById('formulaText').innerHTML = formulaHtml;
-
-      // 儲存目前全盤資料 (供 Google Sheet 使用)
-      currentCalcData = {
-        origin: originRaw,
-        dest: destRaw,
-        weight: singleWeight,
-        cai: singleCaiCeil,
-        pieces: pieces,
-        systemFee: grandTotal,
-        jieFee: jieTotal,
-        songFee: songTotal,
-        teFee: teTotal,
-        tiaoFee: tiaoTotal,
-        lianFee: lianTotal
-      };
-
-      // 預設實收運費帶入系統計算金額
-      const actualInput = document.getElementById('inputActualFee');
-      if (!actualInput.value || actualInput.dataset.userEdited !== "true") {
-        actualInput.value = grandTotal;
-      }
-      calcDifference();
-    }
-
-    // 計算 實收 vs 系統 差異 (多收為正，少收為括號紅字)
-    function calcDifference() {
-      const actualInput = document.getElementById('inputActualFee');
-      actualInput.dataset.userEdited = "true";
-      const actual = parseFloat(actualInput.value) || 0;
-      const sys = currentCalcData.systemFee || 0;
-      const diff = actual - sys;
-      const diffEl = document.getElementById('diffFeeDisplay');
-
-      if (diff > 0) {
-        diffEl.className = "font-bold text-sm font-mono text-emerald-400";
-        diffEl.innerText = `+ 多收 $${diff.toLocaleString()}`;
-      } else if (diff < 0) {
-        diffEl.className = "font-bold text-sm font-mono text-rose-400";
-        diffEl.innerText = `(少收 $${Math.abs(diff).toLocaleString()})`;
-      } else {
-        diffEl.className = "font-bold text-sm font-mono text-slate-300";
-        diffEl.innerText = `$0 (剛好收平)`;
-      }
-    }
-
-    // Google Sheet 網址 Modal 設定
-    function toggleApiModal() {
-      document.getElementById('apiModal').classList.toggle('hidden');
-    }
-
-    function saveScriptUrl() {
-      const url = document.getElementById('scriptUrlInput').value.trim();
-      localStorage.setItem('hct_script_url', url);
-      alert("✅ Google Sheet 網址已儲存！");
-      toggleApiModal();
-    }
-
-    function loadSavedScriptUrl() {
-      const saved = localStorage.getItem('hct_script_url') || "";
-      document.getElementById('scriptUrlInput').value = saved;
-    }
-
-    // 將資料寫入 Google Sheet (需求 5 & 6)
-    function saveToGoogleSheet() {
-      const scriptUrl = localStorage.getItem('hct_script_url');
-      if (!scriptUrl) {
-        alert("請先點擊右上角「Sheet設定」，貼入您的 Google Apps Script Web App 網址！");
-        toggleApiModal();
-        return;
-      }
-
-      const btn = document.getElementById('btnSaveSheet');
-      btn.disabled = true;
-      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> <span>正在上傳紀錄中...</span>`;
-
-      const actualFee = parseFloat(document.getElementById('inputActualFee').value) || 0;
-      const diffFee = actualFee - currentCalcData.systemFee;
-
-      const payload = {
-        dateTime: document.getElementById('inputDateTime').value.replace('T', ' '),
-        customer: document.getElementById('inputCustomer').value.trim() || '未填寫',
-        origin: currentCalcData.origin,
-        dest: currentCalcData.dest,
-        weight: currentCalcData.weight,
-        cai: currentCalcData.cai,
-        pieces: currentCalcData.pieces,
-        systemFee: currentCalcData.systemFee,
-        actualFee: actualFee,
-        diffFee: diffFee >= 0 ? diffFee : `(${Math.abs(diffFee)})`,
-        jieFee: currentCalcData.jieFee,
-        songFee: currentCalcData.songFee,
-        teFee: currentCalcData.teFee,
-        tiaoFee: currentCalcData.tiaoFee,
-        lianFee: currentCalcData.lianFee
-      };
-
-      fetch(scriptUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      }).then(() => {
-        alert("🎉 成功將運費紀錄寫入 Google 試算表！");
-        btn.disabled = false;
-        btn.innerHTML = `<i class="fa-solid fa-file-excel text-base"></i> <span>儲存帳務紀錄至 Google 試算表</span>`;
-      }).catch(err => {
-        alert("❌ 上傳失敗，請檢查網路或 Google Sheet 網址設定。");
-        btn.disabled = false;
-        btn.innerHTML = `<i class="fa-solid fa-file-excel text-base"></i> <span>儲存帳務紀錄至 Google 試算表</span>`;
-      });
-    }
-  </script>
+            const btn = document.querySelector('.btn-submit');
+            btn.innerText = '⏳ 正在儲存至 Google 試算表...';
+            
+            fetch(fullUrl, { method: 'GET', mode: 'no-cors' })
+                .then(() => {
+                    alert('🎉 成功！紀錄已同步送出至 Google 試算表！');
+                    btn.innerText = '💾 儲存帳務紀錄至 Google 試算表';
+                })
+                .catch(err => {
+                    alert('❌ 傳送發生錯誤，請檢查網址是否正確。');
+                    btn.innerText = '💾 儲存帳務紀錄至 Google 試算表';
+                });
+        }
+    </script>
 </body>
 </html>
