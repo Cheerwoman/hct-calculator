@@ -16,45 +16,35 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         body { background-color: var(--bg-dark); color: var(--text-main); padding: 12px; max-width: 600px; margin: 0 auto; }
-        
         .header { background: linear-gradient(135deg, var(--primary), #e65c00); padding: 16px; border-radius: 12px; text-align: center; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(243,111,33,0.3); }
         .header h1 { font-size: 20px; color: #fff; margin-bottom: 4px; }
         .header p { font-size: 12px; color: rgba(255,255,255,0.9); }
-        
         .config-box { background: var(--card-bg); border: 1px solid var(--border-color); padding: 12px; border-radius: 10px; margin-bottom: 15px; }
         .config-box summary { font-size: 13px; color: var(--primary); cursor: pointer; font-weight: bold; }
         .config-box input { width: 100%; padding: 8px; margin-top: 8px; background: #0f172a; border: 1px solid var(--border-color); color: #fff; border-radius: 6px; font-size: 12px; }
-
         .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
         .card-title { font-size: 14px; color: var(--primary); font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-        
         .form-group { margin-bottom: 10px; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         label { display: block; font-size: 12px; color: var(--text-sub); margin-bottom: 4px; }
         input[type="text"], input[type="datetime-local"], select { width: 100%; padding: 10px; background: #0f172a; border: 1px solid var(--border-color); color: var(--text-main); border-radius: 8px; font-size: 14px; }
-        
         .calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .input-with-unit { position: relative; }
         .input-with-unit input { width: 100%; padding-right: 35px; }
         .input-with-unit span { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--text-sub); }
-
         .stepper { display: flex; align-items: center; background: #0f172a; border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
         .stepper button { width: 40px; background: #334155; color: #fff; border: none; font-size: 16px; padding: 10px; cursor: pointer; }
         .stepper button:active { background: var(--primary); }
         .stepper input { text-align: center; border: none; background: transparent; color: #fff; width: 100%; font-size: 14px; }
-
         .checkbox-group { display: grid; grid-template-columns: 1fr; gap: 8px; }
         .checkbox-label { display: flex; align-items: center; background: #0f172a; border: 1px solid var(--border-color); padding: 10px; border-radius: 8px; cursor: pointer; font-size: 13px; }
         .checkbox-label input { width: 18px; height: 18px; margin-right: 8px; accent-color: var(--primary); }
         .checkbox-label span { margin-left: auto; color: var(--primary); font-weight: bold; }
-
         .result-box { background: linear-gradient(135deg, #1e293b, #0f172a); border: 2px solid var(--primary); border-radius: 12px; padding: 14px; margin-top: 15px; }
         .result-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 13px; }
         .result-total { border-top: 1px dashed var(--border-color); padding-top: 10px; margin-top: 10px; font-size: 18px; font-weight: bold; color: var(--primary); }
-        
         .profit-pos { color: #22c55e; font-weight: bold; }
         .profit-neg { color: #ef4444; font-weight: bold; }
-
         .btn-submit { width: 100%; background: linear-gradient(135deg, #22c55e, #16a34a); color: white; border: none; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 15px; box-shadow: 0 4px 12px rgba(34,197,94,0.3); }
         .btn-submit:active { transform: scale(0.98); }
     </style>
@@ -196,10 +186,10 @@
         <div class="card-title">📋 附加服務與特殊費用</div>
         <div class="checkbox-group">
             <label class="checkbox-label">
-                <input type="checkbox" id="jie" onchange="calculate()"> 派單收件 (接費) <span id="jiePrice">$37</span>
+                <input type="checkbox" id="jie" onchange="calculate()" checked> 派單收件 (接費) <span id="jiePrice">$37</span>
             </label>
             <label class="checkbox-label">
-                <input type="checkbox" id="song" onchange="calculate()"> 派送 (送費) <span id="songPrice">$37</span>
+                <input type="checkbox" id="song" onchange="calculate()" checked> 派送 (送費) <span id="songPrice">$37</span>
             </label>
             <label class="checkbox-label">
                 <input type="checkbox" id="te" onchange="calculate()"> 特殊服務費 (樓層/地下室) <span id="tePrice">$60</span>
@@ -229,7 +219,6 @@
     <button class="btn-submit" onclick="saveToGoogleSheet()">💾 儲存帳務紀錄至 Google 試算表</button>
 
     <script>
-        // 完整的 107/08/01 新竹物流標準費率矩陣表
         const RAW_RATE_LIST = [
             ["基隆", "基隆", 50, 65], ["基隆", "台北", 50, 65], ["基隆", "桃園", 55, 95], ["基隆", "中壢", 55, 130], ["基隆", "新竹", 55, 150], ["基隆", "竹南", 55, 150], ["基隆", "苗栗", 75, 185], ["基隆", "大甲", 85, 220], ["基隆", "台中", 90, 255], ["基隆", "沙鹿", 90, 255], ["基隆", "豐原", 95, 275], ["基隆", "南投", 95, 275], ["基隆", "埔里", 100, 290], ["基隆", "彰化", 90, 255], ["基隆", "員林", 95, 275], ["基隆", "斗六", 105, 320], ["基隆", "嘉義", 135, 390], ["基隆", "新營", 120, 345], ["基隆", "麻豆", 130, 365], ["基隆", "台南", 135, 390], ["基隆", "岡山", 140, 415], ["基隆", "高雄", 145, 455], ["基隆", "屏東", 165, 510], ["基隆", "花蓮", 65, 195], ["基隆", "台東", 175, 560],
             ["台北", "基隆", 50, 65], ["台北", "台北", 50, 65], ["台北", "桃園", 50, 65], ["台北", "中壢", 55, 95], ["台北", "新竹", 55, 130], ["台北", "竹南", 55, 150], ["台北", "苗栗", 75, 185], ["台北", "大甲", 85, 220], ["台北", "台中", 90, 255], ["台北", "沙鹿", 85, 220], ["台北", "豐原", 95, 275], ["台北", "南投", 95, 275], ["台北", "埔里", 100, 290], ["台北", "彰化", 90, 255], ["台北", "員林", 95, 275], ["台北", "斗六", 105, 320], ["台北", "嘉義", 135, 390], ["台北", "新營", 120, 345], ["台北", "麻豆", 130, 365], ["台北", "台南", 135, 390], ["台北", "岡山", 140, 415], ["台北", "高雄", 145, 455], ["台北", "屏東", 165, 510], ["台北", "花蓮", 105, 290], ["台北", "台東", 175, 560],
@@ -262,7 +251,6 @@
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             document.getElementById('dateTime').value = now.toISOString().slice(0,16);
-            
             document.getElementById('origin').value = "南崁";
             document.getElementById('dest').value = "南崁";
             
@@ -288,7 +276,7 @@
             let weight = parseFloat(document.getElementById('weight').value) || 0;
             let cai = parseFloat(document.getElementById('cai').value) || 0;
             let pieces = parseInt(document.getElementById('pieces').value) || 1;
-
+            
             let isJie = document.getElementById('jie').checked;
             let isSong = document.getElementById('song').checked;
             let isTe = document.getElementById('te').checked;
@@ -297,7 +285,6 @@
 
             let baseRate = 50;
             let kgRate = 65;
-
             for (let i = 0; i < RAW_RATE_LIST.length; i++) {
                 if (RAW_RATE_LIST[i][0] === origin && RAW_RATE_LIST[i][1] === dest) {
                     baseRate = RAW_RATE_LIST[i][2];
@@ -331,12 +318,10 @@
             document.getElementById('resSong').innerText = '$' + songFee;
             document.getElementById('resTe').innerText = '$' + teFee;
             document.getElementById('resTotal').innerText = '$' + totalSystemFee;
-
             document.getElementById('formulaDesc').innerText = `${origin} ➔ ${dest} | 起碼$${baseRate}, 每百kg$${kgRate} (總重: ${totalWeight}kg)`;
 
             let actualFeeVal = parseFloat(document.getElementById('actualFee').value);
             let diffDisplay = document.getElementById('diffFeeDisplay');
-            
             if(!isNaN(actualFeeVal)) {
                 let diff = actualFeeVal - totalSystemFee;
                 if(diff > 0) {
@@ -351,7 +336,7 @@
             }
         }
 
-function saveToGoogleSheet() {
+        function saveToGoogleSheet() {
             let url = document.getElementById('scriptUrl').value.trim();
             if(!url) {
                 alert('請先在上方「設定 Google Sheet 串接網址」填入 Apps Script 網址！');
@@ -396,3 +381,6 @@ function saveToGoogleSheet() {
                 btn.innerText = '💾 儲存帳務紀錄至 Google 試算表';
             });
         }
+    </script>
+</body>
+</html>
